@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RIC Code Challenge — SBM-G Training Game</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --green-dark: #1B4332;
+    --green-mid: #2D6A4F;
+    --green-light: #52B788;
+    --green-pale: #B7E4C7;
+    --accent: #D4A373;
+    --cream: #FEFAE0;
+    --red: #E63946;
+    --orange: #F4A261;
+    --blue: #457B9D;
+    --purple: #7D3C98;
+    --teal: #0E8174;
+    --grey: #555;
+    --white: #FFFFFF;
+    --bg: #F0F7F4;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .game-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: var(--green-dark);
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    background: var(--green-mid);
+    border-radius: 50%;
+    opacity: 0.3;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; right: 60px;
+    width: 100px; height: 100px;
+    background: var(--green-light);
+    border-radius: 50%;
+    opacity: 0.2;
+  }
+  .header h1 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 28px;
+    color: var(--white);
+    position: relative;
+    z-index: 1;
+  }
+  .header h1 span { color: var(--accent); }
+  .header p {
+    color: var(--green-pale);
+    font-size: 14px;
+    margin-top: 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== SCORE BAR ===== */
+  .score-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .score-card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 14px 20px;
+    flex: 1;
+    min-width: 120px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .score-card .label { font-size: 11px; color: var(--grey); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .score-card .value { font-family: 'Fredoka', sans-serif; font-size: 28px; color: var(--green-dark); margin-top: 4px; }
+  .score-card .value.timer { color: var(--orange); }
+  .score-card .value.streak { color: var(--purple); }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===== START SCREEN ===== */
+  .start-screen {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .start-screen h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 26px;
+    color: var(--green-dark);
+    margin-bottom: 16px;
+  }
+  .start-screen p { color: var(--grey); line-height: 1.6; margin-bottom: 24px; }
+
+  .mode-cards {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .mode-card {
+    background: var(--bg);
+    border: 3px solid transparent;
+    border-radius: 16px;
+    padding: 20px;
+    width: 200px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+  .mode-card:hover { border-color: var(--green-light); transform: translateY(-3px); }
+  .mode-card.selected { border-color: var(--green-mid); background: var(--green-pale); }
+  .mode-card .mode-icon { font-size: 36px; margin-bottom: 8px; }
+  .mode-card .mode-title { font-family: 'Fredoka', sans-serif; font-size: 16px; color: var(--green-dark); }
+  .mode-card .mode-desc { font-size: 12px; color: var(--grey); margin-top: 4px; }
+
+  .btn {
+    display: inline-block;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--green-mid); color: var(--white); }
+  .btn-primary:hover { background: var(--green-dark); transform: scale(1.04); }
+  .btn-secondary { background: var(--accent); color: var(--white); }
+  .btn-secondary:hover { background: #c4955f; }
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border: 2px solid var(--green-pale);
+    border-radius: 50px;
+    background: var(--white);
+    color: var(--green-mid);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 14px;
+  }
+  .btn-back:hover { background: var(--green-pale); border-color: var(--green-mid); }
+
+  /* ===== QUIZ SCREEN ===== */
+  .question-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: var(--shadow-lg);
+    margin-bottom: 20px;
+  }
+  .q-number {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 13px;
+    color: var(--green-light);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .q-text {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 22px;
+    color: var(--green-dark);
+    line-height: 1.4;
+    margin-bottom: 24px;
+  }
+  .q-context {
+    background: var(--cream);
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--grey);
+    line-height: 1.5;
+  }
+
+  /* Options */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+
+  .option-btn {
+    background: var(--bg);
+    border: 3px solid transparent;
+    border-radius: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--green-dark);
+    position: relative;
+    overflow: hidden;
+  }
+  .option-btn:hover:not(.disabled) { border-color: var(--green-light); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(82,183,136,0.2); }
+  .option-btn.correct {
+    border-color: var(--green-mid);
+    background: #d4edda;
+    animation: correctPulse 0.5s ease;
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: #fde8e8;
+    animation: shake 0.4s ease;
+  }
+  .option-btn.disabled { pointer-events: none; opacity: 0.7; }
+  .option-btn .opt-label {
+    display: inline-block;
+    background: var(--green-mid);
+    color: var(--white);
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    text-align: center;
+    line-height: 28px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 14px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  .option-btn.correct .opt-label { background: var(--green-dark); }
+  .option-btn.wrong .opt-label { background: var(--red); }
+
+  @keyframes correctPulse {
+    0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); }
+  }
+
+  /* Feedback */
+  .feedback {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct-fb { background: #d4edda; border-left: 4px solid var(--green-mid); color: var(--green-dark); }
+  .feedback.wrong-fb { background: #fde8e8; border-left: 4px solid var(--red); color: #8b1a1a; }
+  .feedback strong { font-family: 'Fredoka', sans-serif; }
+
+  .next-btn {
+    margin-top: 16px;
+    display: none;
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: var(--green-mid);
+    color: var(--white);
+    font-family: 'Fredoka', sans-serif;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .next-btn:hover { background: var(--green-dark); }
+  .next-btn.show { display: block; }
+
+  /* Progress bar */
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--green-pale);
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-light), var(--green-mid));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== DRAG & DROP (Sort It) ===== */
+  .sort-area {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .sort-zone {
+    background: var(--white);
+    border: 3px dashed var(--green-pale);
+    border-radius: 16px;
+    padding: 16px;
+    width: 260px;
+    min-height: 200px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  .sort-zone.drag-over { border-color: var(--green-mid); background: #e8f8f0; }
+  .sort-zone h3 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 15px;
+    color: var(--green-dark);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--green-pale);
+  }
+
+  .drag-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+    min-height: 60px;
+    padding: 10px;
+    background: var(--cream);
+    border-radius: 14px;
+  }
+  .drag-chip {
+    background: var(--white);
+    border: 2px solid var(--green-light);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 13px;
+    color: var(--green-dark);
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+    touch-action: none;
+  }
+  .drag-chip:active { cursor: grabbing; transform: scale(1.08); box-shadow: var(--shadow); }
+  .drag-chip.placed { opacity: 0.4; pointer-events: none; }
+  .drag-chip.correct-chip { border-color: var(--green-mid); background: #d4edda; }
+  .drag-chip.wrong-chip { border-color: var(--red); background: #fde8e8; }
+
+  .dropped-item {
+    display: inline-block;
+    margin: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: 'Fredoka', sans-serif;
+    background: var(--green-pale);
+    color: var(--green-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dropped-item:hover { background: #fde8e8; }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-screen {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .result-emoji { font-size: 64px; margin-bottom: 16px; }
+  .result-screen h2 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 28px;
+    color: var(--green-dark);
+    margin-bottom: 8px;
+  }
+  .result-score {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 48px;
+    color: var(--green-mid);
+    margin: 16px 0;
+  }
+  .result-stats {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 20px 0 28px;
+    flex-wrap: wrap;
+  }
+  .result-stat {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 12px 20px;
+    min-width: 100px;
+  }
+  .result-stat .rs-val { font-family: 'Fredoka', sans-serif; font-size: 24px; color: var(--green-dark); }
+  .result-stat .rs-lbl { font-size: 11px; color: var(--grey); text-transform: uppercase; letter-spacing: 1px; }
+
+  .result-review {
+    text-align: left;
+    margin-top: 24px;
+  }
+  .result-review h3 {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 18px;
+    color: var(--green-dark);
+    margin-bottom: 12px;
+  }
+  .review-item {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .review-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .review-q { font-size: 13px; color: var(--green-dark); font-weight: 600; }
+  .review-a { font-size: 12px; color: var(--grey); margin-top: 4px; }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--grey);
+  }
+</style>
+</head>
+<body>
+
+<div class="game-container">
+  <!-- HEADER -->
+  <div class="header">
+    <h1>♻ RIC Code <span>Challenge</span></h1>
+    <p>SBM-G Phase II — PHE Assam Training Game</p>
+  </div>
+
+  <!-- SCORE BAR -->
+  <div class="score-bar" id="scoreBar" style="display:none;">
+    <div class="score-card"><div class="label">Score</div><div class="value" id="scoreVal">0</div></div>
+    <div class="score-card"><div class="label">Question</div><div class="value" id="qNum">1/10</div></div>
+    <div class="score-card"><div class="label">Timer</div><div class="value timer" id="timerVal">30</div></div>
+    <div class="score-card"><div class="label">Streak</div><div class="value streak" id="streakVal">0 🔥</div></div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="start-screen">
+      <h2>🎮 Choose Your Challenge</h2>
+      <p>Test your knowledge of RIC plastic codes, recyclability, and end-use applications.<br>Perfect for GP-level training sessions!</p>
+      <div class="mode-cards">
+        <div class="mode-card selected" data-mode="quiz" onclick="selectMode('quiz')">
+          <div class="mode-icon">🧠</div>
+          <div class="mode-title">Quick Quiz</div>
+          <div class="mode-desc">10 MCQ questions<br>30 sec each · Score points</div>
+        </div>
+        <div class="mode-card" data-mode="sort" onclick="selectMode('sort')">
+          <div class="mode-icon">🗂️</div>
+          <div class="mode-title">Sort It!</div>
+          <div class="mode-desc">Drag waste items into<br>correct RIC categories</div>
+        </div>
+        <div class="mode-card" data-mode="enduse" onclick="selectMode('enduse')">
+          <div class="mode-icon">🛣️</div>
+          <div class="mode-title">End-Use Match</div>
+          <div class="mode-desc">Match plastic types<br>to correct applications</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startGame()">Start Playing →</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div class="screen" id="quizScreen">
+    <button class="btn-back" onclick="goBack()">← Back to Menu</button>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="question-card">
+      <div class="q-number" id="qLabel">Question 1 of 10</div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-context" id="qContext" style="display:none;"></div>
+      <div class="options-grid" id="optionsGrid"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+    </div>
+  </div>
+
+  <!-- SORT SCREEN -->
+  <div class="screen" id="sortScreen">
+    <button class="btn-back" onclick="goBack()">← Back to Menu</button>
+    <div class="question-card">
+      <div class="q-number">SORT CHALLENGE</div>
+      <div class="q-text" id="sortTitle"></div>
+      <div class="drag-items" id="dragItems"></div>
+      <div class="sort-area" id="sortZones"></div>
+      <div class="feedback" id="sortFeedback"></div>
+      <button class="next-btn" id="sortNextBtn" onclick="nextSortRound()">Next Round →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div class="result-screen">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <h2 id="resultTitle">Great Job!</h2>
+      <div class="result-score" id="resultScore">0/10</div>
+      <div class="result-stats">
+        <div class="result-stat"><div class="rs-val" id="rsCorrect">0</div><div class="rs-lbl">Correct</div></div>
+        <div class="result-stat"><div class="rs-val" id="rsStreak">0</div><div class="rs-lbl">Best Streak</div></div>
+        <div class="result-stat"><div class="rs-val" id="rsTime">0s</div><div class="rs-lbl">Avg Time</div></div>
+      </div>
+      <div class="result-review" id="resultReview"></div>
+      <br>
+      <button class="btn btn-primary" onclick="resetGame()">Play Again</button>
+      <button class="btn btn-secondary" style="margin-left:10px;" onclick="switchMode()">Try Another Mode</button>
+    </div>
+  </div>
+
+  <div class="footer">PHE Assam · SBM-G Phase II · Training Resource</div>
+</div>
+
+<script>
+// ===== GAME STATE =====
+let mode = 'quiz';
+let score = 0, currentQ = 0, streak = 0, bestStreak = 0, timer = null, timeLeft = 30;
+let questions = [], answers = [], totalTime = 0;
+let sortRound = 0, sortRounds = [];
+
+// ===== QUESTION BANK =====
+const quizBank = [
+  { q: "A Bisleri water bottle is which RIC code?", opts: ["RIC 1 – PET", "RIC 2 – HDPE", "RIC 5 – PP", "RIC 4 – LDPE"], ans: 0, context: "PET (Polyethylene Terephthalate) is used for all transparent water and cold drink bottles.", explain: "All transparent water/cold drink bottles (Bisleri, Aquafina, Pepsi) are RIC 1 – PET. They are highly recyclable and suitable for road construction." },
+  { q: "Which plastic type is MOST PREFERRED for road construction?", opts: ["RIC 1 – PET", "RIC 3 – PVC", "RIC 4 – LDPE", "RIC 6 – PS"], ans: 2, context: "IRC:SP:98 specifies the dry process for plastic roads.", explain: "LDPE (thin carry bags) is the most preferred type for plastic roads. It melts uniformly over hot aggregates at 170°C and bonds excellently with bitumen." },
+  { q: "Which RIC type is the most common single-use plastic waste found in Gaon Panchayats?", opts: ["RIC 1 – PET", "RIC 3 – PVC", "RIC 6 – PS", "RIC 7 – Other"], ans: 0, context: "Think about what people buy and discard most frequently in villages.", explain: "PET bottles (RIC 1) from water, cold drinks, and cooking oil are the most common single-use plastic waste in GPs. They are fully recyclable and fetch good rates when clean." },
+  { q: "An Amul milk pouch is made of which plastic?", opts: ["RIC 1 – PET", "RIC 2 – HDPE", "RIC 4 – LDPE", "RIC 7 – Other"], ans: 1, context: "Milk pouches need to be food-safe and flexible.", explain: "Milk pouches from Amul, Purabi etc. are HDPE (RIC 2). They are fully recyclable and can be used in paver blocks and road construction." },
+  { q: "Gutka/pan masala pouches fall under which RIC code?", opts: ["RIC 5 – PP", "RIC 4 – LDPE", "RIC 6 – PS", "RIC 7 – Other/MLP"], ans: 3, context: "These pouches have multiple layers of plastic and aluminium.", explain: "Gutka pouches are Multi-Layer Plastics (MLP) — RIC 7. They cannot be recycled normally and should go to cement kilns for co-processing." },
+  { q: "Why must bottle caps be removed before shredding PET bottles?", opts: ["Caps damage the shredder blades", "Caps are a different plastic (PP/HDPE) — mixed grades reduce output value", "Caps are not recyclable", "Government regulation requires it"], ans: 1, context: "A PET bottle carries 3–4 different plastic types on it.", explain: "Caps are PP or HDPE, not PET. Mixed-grade flakes fetch only ₹8-12/kg vs ₹25-35/kg for clean PET. Grade purity is the real issue, not blade damage." },
+  { q: "Thermocol packaging is which RIC code?", opts: ["RIC 4 – LDPE", "RIC 5 – PP", "RIC 6 – PS", "RIC 2 – HDPE"], ans: 2, context: "Thermocol is the common Indian name for this material.", explain: "Thermocol is Expanded Polystyrene (EPS) — RIC 6. It has limited recyclability and should NOT be used in road construction as it releases toxic fumes." },
+  { q: "At what percentage of bitumen weight is shredded plastic added in road construction?", opts: ["2%", "5%", "8%", "15%"], ans: 2, context: "The dry process involves adding plastic over heated aggregates.", explain: "Shredded plastic is added at 8% of bitumen weight. The aggregates are heated to 165–170°C, plastic is sprinkled over them, and then hot bitumen is added." },
+  { q: "What should the hydraulic oil level be at in a baling machine?", opts: ["Red mark on sight glass", "Green mark on sight glass", "Full to the top", "Doesn't matter"], ans: 1, context: "Maintenance check before daily operation of the baling machine.", explain: "Hydraulic oil must be at the GREEN mark on the sight glass. Low oil = insufficient pressure = poor bale quality and increased machine wear." },
+  { q: "Clean PET flakes (98%+ purity) fetch approximately what rate?", opts: ["₹5–8/kg", "₹8–12/kg", "₹25–35/kg", "₹50–60/kg"], ans: 2, context: "Grade purity directly impacts revenue from recyclers.", explain: "Clean PET flakes fetch ₹25-35/kg while contaminated mixed-grade flakes only get ₹8-12/kg. That's 2-3× difference — grade purity is revenue." },
+  { q: "Which of these can be made from HDPE + sand melting?", opts: ["Roof tiles", "Paver blocks", "Window frames", "Water tanks"], ans: 1, context: "HDPE/LDPE can be melted and mixed with sand in specific ratios.", explain: "Plastic-sand paver blocks use HDPE/LDPE melted at 180–250°C and mixed with sand (30:70 to 50:50 ratio). They achieve 22–25 N/mm² strength." },
+  { q: "PP woven sacks (cement, rice, fertiliser bags) are which RIC?", opts: ["RIC 2 – HDPE", "RIC 4 – LDPE", "RIC 5 – PP", "RIC 7 – Other"], ans: 2, context: "These strong woven bags are common in every GP.", explain: "Woven sacks are Polypropylene (PP) — RIC 5. Fully recyclable, suitable for road construction, paver blocks, and granulation." },
+  { q: "What happens to RIC 7 (MLP) waste that cannot be recycled?", opts: ["Dumped in landfill", "Sent for cement kiln co-processing", "Burned in open", "Mixed with other plastics"], ans: 1, context: "MLP has no conventional recycling route.", explain: "Non-recyclable MLP goes to cement kilns as alternative fuel (co-processing) or to pyrolysis units. Open burning is illegal and toxic." },
+  { q: "What is the typical bale weight from a PWMU hydraulic baling machine?", opts: ["10–20 kg", "50–100 kg", "200–300 kg", "500 kg"], ans: 1, context: "Bales need to be transportable and stackable.", explain: "Typical bale weight is 50–100 kg per bale. The hydraulic press compacts sorted plastic into dense, strapped blocks ready for transport to recyclers." },
+  { q: "Which type of label on a PET bottle is MOST harmful to recyclers?", opts: ["Paper label", "BOPP (PP) label", "PVC shrink sleeve", "No label"], ans: 2, context: "Labels are made of different plastics than the bottle body.", explain: "PVC shrink sleeves release hydrochloric acid (HCl) at processing temperature, which corrodes recycler machinery. BOPP labels are less harmful but still contaminate PET grade." },
+  { q: "What is the setup cost for a PWMU covered under SBM-G?", opts: ["Up to ₹5 lakh/block", "Up to ₹16 lakh/block", "Up to ₹25 lakh/block", "Up to ₹50 lakh/block"], ans: 1, context: "SBM-G Phase II provides funding for PWMU infrastructure.", explain: "SBM-G provides up to ₹16 lakh per block for PWMU setup, including shredding machine, baling machine, washing area, and storage." },
+  { q: "Flexible PVC pipes from Astral/Finolex are RIC code?", opts: ["RIC 1 – PET", "RIC 3 – PVC", "RIC 5 – PP", "RIC 2 – HDPE"], ans: 1, context: "These are among the most common rigid plastic items in rural areas.", explain: "PVC pipes are RIC 3. They have limited recyclability — should be baled separately and sent to specialised PVC pipe-to-pipe recycling units." },
+  { q: "For paver blocks, what plastic-to-sand ratio is typically used?", opts: ["10:90", "30:70 to 50:50", "70:30", "Pure plastic"], ans: 1, context: "The mix ratio determines strength and durability.", explain: "Plastic-sand paver blocks use 30:70 to 50:50 (plastic:sand) ratio. This gives compressive strength of 22–25 N/mm² comparable to conventional concrete pavers." },
+  { q: "Which of these is NOT a correct step in the PWMU shredding workflow?", opts: ["Remove labels, caps, ribbons", "Sort by RIC code", "Mix all plastic types together", "Wash and dry before shredding"], ans: 2, context: "The workflow follows a specific sequence for quality output.", explain: "Mixing all types together destroys grade purity. The correct flow is: Collect → Sort by RIC → Remove labels/caps/ribbons → Wash & Dry → Shred → Bag for forward linkage." },
+];
+
+// Sort rounds
+const sortBank = [
+  {
+    title: "Sort these items into the correct RIC category!",
+    zones: ["RIC 1 – PET", "RIC 2 – HDPE", "RIC 5 – PP"],
+    items: [
+      { name: "Bisleri bottle", zone: 0 },
+      { name: "Milk pouch", zone: 1 },
+      { name: "Chips packet", zone: 2 },
+      { name: "Pepsi bottle", zone: 0 },
+      { name: "Jerry can", zone: 1 },
+      { name: "Bottle cap", zone: 2 },
+      { name: "Cooking oil bottle", zone: 0 },
+      { name: "Detergent bottle", zone: 1 },
+      { name: "Yoghurt cup", zone: 2 },
+    ]
+  },
+  {
+    title: "Which items should NOT go into the shredder?",
+    zones: ["✓ Can Shred", "✗ Cannot Shred"],
+    items: [
+      { name: "Crushed PET bottles", zone: 0 },
+      { name: "PVC pipe pieces", zone: 1 },
+      { name: "HDPE buckets", zone: 0 },
+      { name: "Gutka pouches (MLP)", zone: 1 },
+      { name: "PP woven sacks", zone: 0 },
+      { name: "Medical waste", zone: 1 },
+      { name: "LDPE carry bags", zone: 0 },
+      { name: "Thermocol (EPS)", zone: 1 },
+    ]
+  },
+  {
+    title: "Sort by end-use destination!",
+    zones: ["Road Construction", "Cement Kiln", "Recycler (Granulation)"],
+    items: [
+      { name: "Clean PET flakes", zone: 2 },
+      { name: "Shredded LDPE bags", zone: 0 },
+      { name: "Gutka pouches", zone: 1 },
+      { name: "HDPE granules", zone: 2 },
+      { name: "Shredded PP cups", zone: 0 },
+      { name: "Thermocol (PS)", zone: 1 },
+      { name: "Multi-layer packets", zone: 1 },
+      { name: "Shredded HDPE", zone: 0 },
+    ]
+  },
+];
+
+// End-use match questions
+const endUseBank = [
+  { q: "A GP collected 200 kg of thin carry bags from the weekly market. What's the BEST use?", opts: ["Road construction (dry process)", "Cement kiln co-processing", "Landfill", "Eco-bricks"], ans: 0, explain: "Thin carry bags are LDPE (RIC 4) — the MOST preferred plastic type for road construction. Shred to 2.36mm and add at 8% of bitumen weight over hot aggregates." },
+  { q: "Your PWMU has collected 500 kg of gutka pouches. Where should they go?", opts: ["Mix with PET for road construction", "Paver block manufacturing", "Cement kiln co-processing", "Sell to local recycler"], ans: 2, explain: "Gutka pouches are MLP (RIC 7) — non-recyclable through normal channels. Cement kilns use them as alternative fuel, recovering energy while destroying the waste safely." },
+  { q: "A recycler is offering ₹30/kg for PET flakes but only if purity is above 98%. What must the PWMU ensure?", opts: ["Shred faster", "Remove all caps, labels and neck ribbons before shredding", "Mix with HDPE for volume", "Add water while shredding"], ans: 1, explain: "Caps are PP, labels are BOPP/PVC — even 2-3% contamination rejects the batch. Removing them before shredding ensures 98%+ PET purity and ₹25-35/kg rates vs ₹8-12/kg for mixed." },
+  { q: "The Block wants to build a pathway to the community hall using plastic waste. Which option?", opts: ["Plastic-sand paver blocks (HDPE/LDPE + sand)", "Spread plastic waste on ground", "Use PVC pipes as borders", "Thermocol sheets under concrete"], ans: 0, explain: "HDPE/LDPE melted at 180-250°C and mixed with sand (30:70 to 50:50) creates paver blocks with 22-25 N/mm² strength — comparable to concrete pavers." },
+  { q: "During road work, the contractor asks what plastic waste he can accept. Your answer?", opts: ["All types — no sorting needed", "Only PET, HDPE, LDPE, PP (RIC 1, 2, 4, 5)", "Only PVC and thermocol", "Only new/unused plastic"], ans: 1, explain: "Only RIC 1 (PET), 2 (HDPE), 4 (LDPE), and 5 (PP) are suitable. PVC releases toxic HCl, PS decomposes toxically. Plastic must be clean, dry, and shredded to 2.36mm." },
+  { q: "The baling machine is producing loose, weak bales. First thing to check?", opts: ["Shredder blade sharpness", "Hydraulic oil level — must be at GREEN mark", "Weight of plastic loaded", "Room temperature"], ans: 1, explain: "Low hydraulic oil = insufficient pressure = weak bales. Check the sight glass daily — oil must be at the GREEN mark. Top up with HLP 46/68 grade oil if low." },
+  { q: "PVC pipes collected from a demolished house — what to do?", opts: ["Shred and mix with PET", "Use in road construction", "Bale separately and send to specialised PVC recycler", "Burn them"], ans: 2, explain: "PVC (RIC 3) cannot be mixed with other plastics, shredded in standard PWMU machines, or used in roads. Bale separately and forward to specialised PVC pipe-to-pipe recyclers." },
+  { q: "A GP worker finds thermocol boxes from the fish market. End-use recommendation?", opts: ["Road construction", "Paver blocks", "Densify, bale, and send for cement kiln co-processing", "Shred with PET bottles"], ans: 2, explain: "Thermocol is Expanded Polystyrene (RIC 6) — toxic when heated, limited recyclability. Densify to reduce volume, bale, and forward to cement kilns for energy recovery." },
+  { q: "An EE asks about the cement-plastic brick mix. What's the correct aggregate replacement?", opts: ["50% by weight", "3–6% of aggregate by weight", "25% by weight", "100% replacement"], ans: 1, explain: "Shredded PET/PP (2-3mm) replaces 3-6% of aggregate by weight in cement mix. This gives ~27 N/mm² strength — suitable for boundary walls and non-load-bearing structures." },
+];
+
+// ===== MODE SELECTION =====
+function selectMode(m) {
+  mode = m;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-mode="${m}"]`).classList.add('selected');
+}
+
+// ===== START GAME =====
+function startGame() {
+  score = 0; currentQ = 0; streak = 0; bestStreak = 0; answers = []; totalTime = 0;
+  document.getElementById('startScreen').classList.remove('active');
+
+  if (mode === 'quiz') {
+    questions = shuffle(quizBank).slice(0, 10);
+    document.getElementById('scoreBar').style.display = 'flex';
+    document.getElementById('quizScreen').classList.add('active');
+    showQuestion();
+  } else if (mode === 'sort') {
+    sortRound = 0;
+    sortRounds = shuffle([...sortBank]);
+    document.getElementById('scoreBar').style.display = 'flex';
+    document.getElementById('sortScreen').classList.add('active');
+    showSortRound();
+  } else if (mode === 'enduse') {
+    questions = shuffle(endUseBank).slice(0, 8);
+    document.getElementById('scoreBar').style.display = 'flex';
+    document.getElementById('quizScreen').classList.add('active');
+    showQuestion();
+  }
+  updateScore();
+}
+
+// ===== QUIZ LOGIC =====
+function showQuestion() {
+  const q = questions[currentQ];
+  const total = questions.length;
+  document.getElementById('qLabel').textContent = `Question ${currentQ + 1} of ${total}`;
+  document.getElementById('qText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${((currentQ) / total) * 100}%`;
+  document.getElementById('qNum').textContent = `${currentQ + 1}/${total}`;
+
+  if (q.context) {
+    document.getElementById('qContext').style.display = 'block';
+    document.getElementById('qContext').textContent = '💡 ' + q.context;
+  } else {
+    document.getElementById('qContext').style.display = 'none';
+  }
+
+  const grid = document.getElementById('optionsGrid');
+  grid.innerHTML = '';
+  const labels = ['A', 'B', 'C', 'D'];
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-label">${labels[i]}</span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').innerHTML = '';
+  document.getElementById('nextBtn').className = 'next-btn';
+
+  timeLeft = 30;
+  document.getElementById('timerVal').textContent = timeLeft;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerVal').textContent = timeLeft;
+    if (timeLeft <= 0) { clearInterval(timer); selectAnswer(-1); }
+  }, 1000);
+}
+
+function selectAnswer(idx) {
+  clearInterval(timer);
+  const q = questions[currentQ];
+  const btns = document.querySelectorAll('.option-btn');
+  const timeTaken = 30 - timeLeft;
+  totalTime += timeTaken;
+
+  btns.forEach(b => b.classList.add('disabled'));
+  const fb = document.getElementById('feedback');
+
+  if (idx === q.ans) {
+    btns[idx].classList.add('correct');
+    const pts = Math.max(10, 100 - timeTaken * 3) + (streak >= 2 ? 20 : 0);
+    score += pts;
+    streak++;
+    if (streak > bestStreak) bestStreak = streak;
+    fb.className = 'feedback correct-fb show';
+    fb.innerHTML = `<strong>✅ Correct! +${pts} points${streak >= 3 ? ' (🔥 Streak bonus!)' : ''}</strong><br>${q.explain}`;
+    answers.push({ q: q.q, correct: true, explain: q.explain });
+  } else {
+    if (idx >= 0) btns[idx].classList.add('wrong');
+    btns[q.ans].classList.add('correct');
+    streak = 0;
+    fb.className = 'feedback wrong-fb show';
+    fb.innerHTML = `<strong>❌ ${idx < 0 ? "Time's up!" : "Not quite!"}</strong> The answer is: <strong>${q.opts[q.ans]}</strong><br>${q.explain}`;
+    answers.push({ q: q.q, correct: false, explain: `Correct: ${q.opts[q.ans]}. ${q.explain}` });
+  }
+
+  updateScore();
+  document.getElementById('nextBtn').className = 'next-btn show';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    showResults();
+  } else {
+    showQuestion();
+  }
+}
+
+// ===== SORT LOGIC =====
+let draggedChip = null;
+let sortCorrect = 0;
+let sortTotal = 0;
+
+function showSortRound() {
+  if (sortRound >= sortRounds.length) { showResults(); return; }
+  const round = sortRounds[sortRound];
+  document.getElementById('sortTitle').textContent = round.title;
+  document.getElementById('qNum').textContent = `${sortRound + 1}/${sortRounds.length}`;
+
+  const itemsDiv = document.getElementById('dragItems');
+  itemsDiv.innerHTML = '';
+  const shuffledItems = shuffle([...round.items]);
+  shuffledItems.forEach((item, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'drag-chip';
+    chip.textContent = item.name;
+    chip.dataset.zone = item.zone;
+    chip.dataset.idx = i;
+    chip.draggable = true;
+    chip.ondragstart = (e) => { draggedChip = chip; e.dataTransfer.setData('text', i); };
+    // Touch support
+    chip.ontouchstart = (e) => { draggedChip = chip; };
+    itemsDiv.appendChild(chip);
+  });
+
+  const zonesDiv = document.getElementById('sortZones');
+  zonesDiv.innerHTML = '';
+  round.zones.forEach((zoneName, zi) => {
+    const zone = document.createElement('div');
+    zone.className = 'sort-zone';
+    zone.dataset.zone = zi;
+    zone.innerHTML = `<h3>${zoneName}</h3><div class="zone-items"></div>`;
+    zone.ondragover = (e) => { e.preventDefault(); zone.classList.add('drag-over'); };
+    zone.ondragleave = () => zone.classList.remove('drag-over');
+    zone.ondrop = (e) => { e.preventDefault(); zone.classList.remove('drag-over'); dropChip(zone, zi); };
+    // Touch support
+    zone.ontouchend = (e) => { e.preventDefault(); zone.classList.remove('drag-over'); if(draggedChip) dropChip(zone, zi); };
+    zone.ontouchmove = (e) => { e.preventDefault(); };
+    zonesDiv.appendChild(zone);
+  });
+
+  document.getElementById('sortFeedback').className = 'feedback';
+  document.getElementById('sortNextBtn').className = 'next-btn';
+
+  timeLeft = 60;
+  document.getElementById('timerVal').textContent = timeLeft;
+  clearInterval(timer);
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timerVal').textContent = timeLeft;
+    if (timeLeft <= 0) { clearInterval(timer); checkSortRound(); }
+  }, 1000);
+}
+
+function dropChip(zone, zoneIdx) {
+  if (!draggedChip) return;
+  const correctZone = parseInt(draggedChip.dataset.zone);
+  const itemsContainer = zone.querySelector('.zone-items');
+
+  const dropped = document.createElement('div');
+  dropped.className = 'dropped-item';
+  dropped.textContent = draggedChip.textContent;
+  dropped.dataset.correctZone = correctZone;
+  dropped.dataset.placedZone = zoneIdx;
+  dropped.onclick = () => { dropped.remove(); draggedChip.classList.remove('placed'); draggedChip = null; };
+  itemsContainer.appendChild(dropped);
+
+  draggedChip.classList.add('placed');
+  draggedChip = null;
+
+  // Check if all placed
+  const allChips = document.querySelectorAll('.drag-chip');
+  const allPlaced = [...allChips].every(c => c.classList.contains('placed'));
+  if (allPlaced) checkSortRound();
+}
+
+function checkSortRound() {
+  clearInterval(timer);
+  const dropped = document.querySelectorAll('.dropped-item');
+  let roundCorrect = 0, roundTotal = dropped.length;
+  const round = sortRounds[sortRound];
+
+  // Mark correct/wrong
+  dropped.forEach(d => {
+    d.style.cursor = 'default';
+    d.onclick = null;
+    if (d.dataset.correctZone === d.dataset.placedZone) {
+      d.style.background = '#d4edda';
+      d.style.border = '1px solid #27AE60';
+      roundCorrect++;
+    } else {
+      d.style.background = '#fde8e8';
+      d.style.border = '1px solid #E63946';
+      // Show where it should have gone
+      const correctZoneName = round.zones[parseInt(d.dataset.correctZone)];
+      d.textContent = d.textContent + ' → ' + correctZoneName;
+      d.style.fontSize = '11px';
+    }
+  });
+
+  // Also show any unplaced items with their correct zones
+  const unplaced = document.querySelectorAll('.drag-chip:not(.placed)');
+  if (unplaced.length > 0) {
+    unplaced.forEach(chip => {
+      const correctZoneIdx = parseInt(chip.dataset.zone);
+      const correctZoneName = round.zones[correctZoneIdx];
+      const zones = document.querySelectorAll('.sort-zone');
+      zones.forEach(z => {
+        if (parseInt(z.dataset.zone) === correctZoneIdx) {
+          const missed = document.createElement('div');
+          missed.className = 'dropped-item';
+          missed.textContent = chip.textContent + ' (missed)';
+          missed.style.background = '#fff3e0';
+          missed.style.border = '1px solid #E67E22';
+          missed.style.fontSize = '11px';
+          missed.style.cursor = 'default';
+          z.querySelector('.zone-items').appendChild(missed);
+        }
+      });
+      chip.style.opacity = '0.3';
+    });
+    roundTotal += unplaced.length;
+  }
+
+  sortCorrect += roundCorrect;
+  sortTotal += roundTotal;
+  score += roundCorrect * 15;
+
+  const fb = document.getElementById('sortFeedback');
+  const pct = roundTotal > 0 ? Math.round(roundCorrect / roundTotal * 100) : 0;
+  fb.className = `feedback ${pct >= 70 ? 'correct-fb' : 'wrong-fb'} show`;
+  fb.innerHTML = `<strong>${pct >= 70 ? '🎉' : '😅'} ${roundCorrect}/${roundTotal} correct (${pct}%)</strong><br>+${roundCorrect * 15} points!<br><span style="font-size:12px; color:#555;">Wrongly placed items show their correct zone with →</span>`;
+
+  answers.push({ q: sortRounds[sortRound].title, correct: pct >= 70, explain: `${roundCorrect}/${roundTotal} items sorted correctly.` });
+  updateScore();
+  document.getElementById('sortNextBtn').className = 'next-btn show';
+}
+
+function nextSortRound() {
+  sortRound++;
+  if (sortRound >= sortRounds.length) {
+    showResults();
+  } else {
+    showSortRound();
+  }
+}
+
+// ===== RESULTS =====
+function showResults() {
+  clearInterval(timer);
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('scoreBar').style.display = 'none';
+  document.getElementById('resultScreen').classList.add('active');
+
+  const correct = answers.filter(a => a.correct).length;
+  const total = answers.length;
+  const pct = Math.round(correct / total * 100);
+
+  let emoji = '🏆', title = 'Outstanding!';
+  if (pct < 40) { emoji = '📚'; title = 'Keep Learning!'; }
+  else if (pct < 60) { emoji = '💪'; title = 'Good Effort!'; }
+  else if (pct < 80) { emoji = '🌟'; title = 'Well Done!'; }
+  else if (pct < 100) { emoji = '🔥'; title = 'Excellent!'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultScore').textContent = `${score} points`;
+  document.getElementById('rsCorrect').textContent = `${correct}/${total}`;
+  document.getElementById('rsStreak').textContent = bestStreak;
+  document.getElementById('rsTime').textContent = total > 0 ? `${Math.round(totalTime / total)}s` : '—';
+
+  const review = document.getElementById('resultReview');
+  review.innerHTML = '<h3>📋 Review — Learn from Every Question</h3>';
+  answers.forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    div.innerHTML = `
+      <div class="review-icon">${a.correct ? '✅' : '❌'}</div>
+      <div>
+        <div class="review-q">${a.q}</div>
+        <div class="review-a">${a.explain}</div>
+      </div>`;
+    review.appendChild(div);
+  });
+}
+
+// ===== HELPERS =====
+function updateScore() {
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('streakVal').textContent = `${streak} ${streak >= 3 ? '🔥' : ''}`;
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function resetGame() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  startGame();
+}
+
+function switchMode() {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('scoreBar').style.display = 'none';
+  document.getElementById('startScreen').classList.add('active');
+}
+
+function goBack() {
+  if (confirm('Go back to menu? Your current progress will be lost.')) {
+    clearInterval(timer);
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('scoreBar').style.display = 'none';
+    document.getElementById('startScreen').classList.add('active');
+  }
+}
+</script>
+
+</body>
+</html>
