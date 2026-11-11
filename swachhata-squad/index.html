@@ -13,13 +13,12 @@
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
     -webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none}
   #stage{position:fixed;inset:0;overflow:hidden;
-    background:linear-gradient(#9fd8ee 0%,#d8f1e4 46%,#8cc27a 46%,#79b368 58%,#d9b98a 58%,#c9a674 100%)}
+    background:#e2b77f}
+  #scene{position:absolute;left:0;right:0;z-index:0;display:block;width:100%}
   #hud{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;justify-content:space-between;gap:6px;
     padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;background:#0d2a20;color:#fff;font-size:14px;font-weight:700}
   #hud b{color:#f2c94c;font-size:17px}
   #hud .neg b{color:#ff8a80}
-  .sun{position:absolute;top:70px;right:26px;font-size:44px;opacity:.9}
-  .tree{position:absolute;font-size:54px}
   #bins{position:absolute;left:0;right:0;z-index:2;display:flex;gap:10px;padding:0 10px;height:104px}
   .bin{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
   .bin .top{position:absolute;top:-34px;font-size:26px;height:30px;transition:opacity .4s}
@@ -32,7 +31,15 @@
   .body .n{font-size:clamp(11px,3.2vw,15px);font-weight:800;color:#fff;line-height:1.1}
   .bin.pulse .lid{transform:rotate(-24deg)}
   .person{position:absolute;left:0;top:0;z-index:3;width:max-content;text-align:center;will-change:transform}
-  .person .p{font-size:58px;line-height:1}
+  .person .p{line-height:0}
+  .person .p svg{width:92px;height:156px;display:block;margin:0 auto;filter:drop-shadow(0 5px 4px rgba(0,0,0,.25))}
+  .person .lg{transform-box:fill-box;transform-origin:50% 0}
+  .person.walk .lg1{animation:leg .42s ease-in-out infinite alternate}
+  .person.walk .lg2{animation:leg .42s ease-in-out infinite alternate-reverse}
+  @keyframes leg{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+  .person .armUp{display:none}
+  .person.carry .armUp{display:block}
+  .person.carry .armDn{display:none}
   .person .bub{display:inline-block;background:#fff;border-radius:12px;padding:3px 8px;font-size:12px;font-weight:700;
     box-shadow:0 2px 6px rgba(0,0,0,.3);margin-bottom:2px;white-space:nowrap}
   .person .bub span{font-size:22px;vertical-align:middle}
@@ -49,6 +56,18 @@
   .pop{position:absolute;z-index:7;font-size:20px;font-weight:900;pointer-events:none;white-space:nowrap;
     text-shadow:0 1px 0 #fff,0 2px 5px rgba(0,0,0,.5);transform:translateX(-50%);animation:up .9s ease-out forwards}
   @keyframes up{to{margin-top:-56px;opacity:0}}
+  .pt{position:absolute;z-index:5;width:9px;height:9px;border-radius:50%;margin:-4px 0 0 -4px;animation:pt .55s ease-out forwards}
+  @keyframes pt{to{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+  #stage.shake{animation:shk .28s}
+  @keyframes shk{20%{transform:translate(-6px,2px)}40%{transform:translate(6px,-2px)}60%{transform:translate(-4px,1px)}80%{transform:translate(4px,0)}}
+  .cloud{position:absolute;z-index:1;width:90px;height:26px;border-radius:20px;background:rgba(255,255,255,.85);animation:drift linear infinite}
+  .cloud:before{content:"";position:absolute;left:16px;top:-14px;width:38px;height:30px;border-radius:50%;background:inherit}
+  .cloud:after{content:"";position:absolute;left:44px;top:-8px;width:28px;height:22px;border-radius:50%;background:inherit}
+  @keyframes drift{from{transform:translateX(-120px)}to{transform:translateX(110vw)}}
+  #mute{background:none;border:0;font-size:18px;color:#fff;padding:0 2px}
+  #combo{position:absolute;z-index:6;left:10px;font-size:15px;font-weight:900;color:#fff;background:#e65100;border-radius:999px;
+    padding:4px 12px;opacity:0;transition:opacity .3s;box-shadow:0 3px 8px rgba(0,0,0,.35)}
+  #combo.show{opacity:1}
   #panel{position:absolute;left:0;right:0;bottom:0;z-index:6;background:#0d2a20;
     padding:10px 8px calc(env(safe-area-inset-bottom,0px) + 10px)}
   #panel .cap{color:#b9d3c6;font-size:12px;text-align:center;margin-bottom:6px}
@@ -82,8 +101,10 @@
 </head>
 <body>
 <div id="stage">
-  <div class="sun">☀️</div>
-  <div id="hud"><span id="hPts">Points: <b>0</b></span><span id="hFine">Challans: <b>0</b></span><span id="hNum">0/10</span></div>
+  <svg id="scene" viewBox="0 0 360 600" preserveAspectRatio="none" aria-hidden="true"></svg>
+  <div id="hud"><span id="hPts">Points: <b>0</b></span><span id="hFine">Challans: <b>0</b></span><span><span id="hNum">0/10</span> <button id="mute" aria-label="Sound">🔊</button></span></div>
+  <div id="combo"></div>
+  <div class="cloud" style="top:92px;animation-duration:70s"></div><div class="cloud" style="top:150px;animation-duration:95s;animation-delay:-40s;opacity:.7"></div>
   <div id="bins"></div>
   <div id="gun"></div>
   <div id="panel"><div class="cap">Pick the colour of the correct stream, then tap the flying waste</div><div id="ammo"></div></div>
@@ -97,7 +118,7 @@
   // ---------- Settings and content (edit here) ----------
   var FINE_AMOUNT = 0;        // set a rupee amount here only once it is confirmed from the order or bye-law; 0 hides the amount
   var VILLAGERS = 10, WRONG_THROW_CHANCE = 0.6;
-  var PTS = { hit:10, fine:10, badShot:-5, badFine:-10, escape:-5 };
+  var PTS = { hit:10, fine:10, badShot:-5, badFine:-10, escape:-5, combo:5 };   // combo bonus on every 3 in a row
   var CATS = {
     wet:{ name:"Wet waste", color:"#2e9e5b", icon:"🌱",
       items:[["🍌","Banana peel"],["🥬","Vegetable waste"],["🍚","Leftover rice"],["🍅","Rotten tomato"],["🐟","Fish waste"],["🥚","Eggshells"]] },
@@ -109,7 +130,6 @@
       items:[["🔋","Used battery"],["💡","LED bulb"],["💊","Expired tablets"],["🎨","Paint can"],["🌡️","Mercury thermometer"]] }
   };
   var ORDER = ["wet","dry","san","spc"], MIX = { wet:3, dry:3, san:2, spc:2 };
-  var FACES = ["👨‍🌾","👩‍🌾","👴","👵","🧔","👩","👨","🧑"];
   // -------------------------------------------------------
 
   var $ = function(id){ return document.getElementById(id); };
@@ -126,10 +146,99 @@
     a.addEventListener("pointerdown", function(e){ e.stopPropagation(); pick(k); });
     ammoEl.appendChild(a); ammoBtns[k] = a;
   });
-  [["🌳",6,0],["🌴",78,0],["🏠",40,0]].forEach(function(t){
-    var d = document.createElement("div"); d.className = "tree"; d.textContent = t[0]; d.style.left = t[1] + "%"; stage.appendChild(d); t[2] = d;
-    d.dataset.deco = "1";
-  });
+  // ---------- Scenery: a hand-drawn Assam village lane (SVG, no image files) ----------
+  function house(x, y, k, wall, roof){
+    var h = "<g transform='translate(" + x + "," + y + ") scale(" + k + ")'>";
+    [-26,-9,9,26].forEach(function(sx){ h += "<rect x='" + (sx-1.5) + "' y='-24' width='3' height='24' fill='#7a4f28'/>"; });
+    h += "<path d='M-14 0 L-10 -24 M-6 0 L-2 -24 M-13 -6 H-5 M-12 -12 H-4 M-11 -18 H-3' stroke='#7a4f28' stroke-width='1.6' fill='none'/>" +
+      "<rect x='-34' y='-28' width='68' height='5' rx='1' fill='#8a5a2b'/>" +
+      "<rect x='-29' y='-60' width='58' height='32' fill='" + wall + "'/>";
+    for(var i = -24; i < 29; i += 6) h += "<line x1='" + i + "' y1='-60' x2='" + i + "' y2='-28' stroke='rgba(120,80,30,.28)' stroke-width='1'/>";
+    h += "<rect x='-7' y='-50' width='13' height='22' fill='#6b4423'/><rect x='12' y='-52' width='11' height='10' fill='#6b4423'/>" +
+      "<path d='M-42 -57 L0 -92 L42 -57 Z' fill='" + roof + "' stroke='#93642a' stroke-width='1.5' stroke-linejoin='round'/>" +
+      "<path d='M-30 -62 L0 -86 M-16 -60 L0 -80 M30 -62 L0 -86 M16 -60 L0 -80' stroke='rgba(120,80,30,.4)' stroke-width='1.2' fill='none'/></g>";
+    return h;
+  }
+  function palm(x, y, ht){
+    var tx = x + 5, ty = y - ht, h = "<path d='M" + x + " " + y + " Q" + (x+9) + " " + (y-ht/2) + " " + tx + " " + ty + "' stroke='#9c7a55' stroke-width='5' fill='none' stroke-linecap='round'/>";
+    [[-42,10],[-36,-14],[-18,-30],[4,-34],[26,-28],[40,-10],[44,14]].forEach(function(f, i){
+      h += "<path d='M" + tx + " " + ty + " Q" + (tx+f[0]*0.55) + " " + (ty+f[1]-12) + " " + (tx+f[0]) + " " + (ty+f[1]) + "' stroke='" + (i%2 ? "#2f9e4f" : "#3fb35e") + "' stroke-width='6' fill='none' stroke-linecap='round'/>";
+    });
+    return h + "<circle cx='" + (tx-3) + "' cy='" + (ty+5) + "' r='3' fill='#e08a2c'/><circle cx='" + (tx+3) + "' cy='" + (ty+6) + "' r='3' fill='#d67a1f'/>";
+  }
+  function banana(x, y, k){
+    var h = "<g transform='translate(" + x + "," + y + ") scale(" + k + ")'>";
+    [[-34,"#3aa857"],[-12,"#4cbb67"],[12,"#3aa857"],[36,"#4cbb67"]].forEach(function(l){
+      h += "<g transform='rotate(" + l[0] + ")'><ellipse cx='0' cy='-30' rx='9' ry='30' fill='" + l[1] + "'/><line x1='0' y1='0' x2='0' y2='-58' stroke='#bfe6a8' stroke-width='1.5'/></g>";
+    });
+    return h + "</g>";
+  }
+  (function(){
+    var h = "<defs><linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#6ec3ee'/><stop offset='1' stop-color='#d9f3fb'/></linearGradient>" +
+      "<linearGradient id='grs' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#9ad873'/><stop offset='1' stop-color='#63ad48'/></linearGradient>" +
+      "<linearGradient id='pth' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#e9c491'/><stop offset='1' stop-color='#d3a56b'/></linearGradient></defs>" +
+      "<rect width='360' height='260' fill='url(#sky)'/>" +
+      "<circle cx='296' cy='62' r='40' fill='#fff6c9' opacity='.55'/><circle cx='296' cy='62' r='24' fill='#ffd84d'/>" +
+      "<path d='M0 240 Q60 150 130 205 T260 175 T360 200 V260 H0 Z' fill='#8fd0ad'/>" +
+      "<path d='M0 250 Q90 185 190 225 T360 215 V262 H0 Z' fill='#63b98a'/>" +
+      "<path d='M30 244 Q100 205 190 232 M70 250 Q150 218 240 240 M200 236 Q280 218 350 226 M230 246 Q300 228 356 236' stroke='#4fa377' stroke-width='3' fill='none' stroke-linecap='round' opacity='.7'/>" +
+      "<rect y='236' width='360' height='152' fill='url(#grs)'/>" +
+      palm(22, 262, 120) + palm(334, 258, 132) + palm(92, 250, 86) + palm(286, 250, 74) +
+      house(66, 262, 0.78, "#f0d59c", "#c08a3e") + house(262, 258, 0.62, "#ead0a0", "#b47f3a") +
+      banana(8, 300, 0.95) + banana(352, 304, 1.05) + banana(150, 252, 0.5) +
+      "<path d='M0 388 Q90 380 180 386 T360 384 V600 H0 Z' fill='url(#pth)'/>" +
+      "<path d='M0 388 Q90 380 180 386 T360 384' stroke='#b98a55' stroke-width='3' fill='none' opacity='.6'/>";
+    [[40,430,10],[120,470,7],[250,440,9],[310,500,11],[70,540,8],[200,520,6],[280,570,9],[150,585,7]].forEach(function(q){
+      h += "<ellipse cx='" + q[0] + "' cy='" + q[1] + "' rx='" + q[2] + "' ry='" + q[2]*0.3 + "' fill='#c6965c' opacity='.55'/>";
+    });
+    [[14,392],[58,396],[300,394],[340,390],[190,392]].forEach(function(q){
+      h += "<path d='M" + q[0] + " " + q[1] + " l-4 -12 M" + q[0] + " " + q[1] + " l0 -15 M" + q[0] + " " + q[1] + " l5 -11' stroke='#4c9a3c' stroke-width='2.4' stroke-linecap='round'/>";
+    });
+    $("scene").innerHTML = h;
+  })();
+
+  // ---------- Villagers drawn in Assamese dress (SVG) ----------
+  var VILLAGERS_ART = [
+    { skin:"#c98d5e", hair:"#1d1a18", top:"#fdfdf8", bottom:"dhoti",  bcol:"#f6f3e8", gamosa:true },
+    { skin:"#b97a4c", hair:"#1d1a18", top:"#f7ecd2", bottom:"mekhela",bcol:"#f7ecd2", trim:"#c62828", bun:true, chador:true },
+    { skin:"#c98d5e", hair:"#d8d8d8", top:"#5b7c99", bottom:"lungi",  bcol:"#3f6fa3", check:true },
+    { skin:"#d09a6a", hair:"#1d1a18", top:"#e9c46a", bottom:"mekhela",bcol:"#d9a441", trim:"#1f6f4a", bun:true, chador:true },
+    { skin:"#b97a4c", hair:"#1d1a18", top:"#3d8f6b", bottom:"pants",  bcol:"#3b3f52" },
+    { skin:"#c98d5e", hair:"#1d1a18", top:"#fdfdf8", bottom:"dhoti",  bcol:"#f6f3e8", japi:true },
+    { skin:"#d09a6a", hair:"#cfcfcf", top:"#f4f1ea", bottom:"mekhela",bcol:"#ece5d3", trim:"#7e1a1a", bun:true, chador:true }
+  ];
+  function villager(v){
+    var h = "<svg viewBox='0 -12 64 122' xmlns='http://www.w3.org/2000/svg'>", sk = v.skin, foot = "#4a3524";
+    if(v.bottom === "mekhela"){
+      h += "<g class='lg lg1'><ellipse cx='27' cy='105' rx='6' ry='3' fill='" + foot + "'/></g><g class='lg lg2'><ellipse cx='38' cy='105' rx='6' ry='3' fill='" + foot + "'/></g>" +
+           "<path d='M21 60 H43 L48 102 H16 Z' fill='" + v.bcol + "' stroke='rgba(0,0,0,.12)'/><path d='M16.6 96 H47.4 L48 102 H16 Z' fill='" + v.trim + "'/>" +
+           "<path d='M26 78 l2 -3 l2 3 l-2 3 Z M36 86 l2 -3 l2 3 l-2 3 Z M30 70 l1.5 -2.5 l1.5 2.5 l-1.5 2.5 Z' fill='" + v.trim + "' opacity='.8'/>";
+    } else {
+      var legc = v.bottom === "pants" ? v.bcol : sk, top = v.bottom === "pants" ? 62 : 84;
+      h += "<g class='lg lg1'><rect x='23' y='" + top + "' width='8' height='" + (102-top) + "' rx='3' fill='" + legc + "'/><ellipse cx='27' cy='104' rx='6.5' ry='3.2' fill='" + foot + "'/></g>" +
+           "<g class='lg lg2'><rect x='34' y='" + top + "' width='8' height='" + (102-top) + "' rx='3' fill='" + legc + "'/><ellipse cx='38' cy='104' rx='6.5' ry='3.2' fill='" + foot + "'/></g>";
+      if(v.bottom !== "pants"){
+        h += "<path d='M21 60 H43 L45 88 H19 Z' fill='" + v.bcol + "' stroke='rgba(0,0,0,.12)'/>";
+        if(v.check) h += "<path d='M20 68 H44 M19.5 78 H44.5 M27 60 L26 88 M37 60 L38 88' stroke='rgba(255,255,255,.45)' stroke-width='1.3'/>";
+        else h += "<path d='M32 62 L30 88' stroke='rgba(0,0,0,.12)' stroke-width='1.5'/>";
+      }
+    }
+    h += "<path d='M21 42 Q13 54 15 66' stroke='" + v.top + "' stroke-width='7.5' fill='none' stroke-linecap='round'/><circle cx='15' cy='68' r='4' fill='" + sk + "'/>" +
+         "<g class='armDn'><path d='M43 42 Q51 54 49 66' stroke='" + v.top + "' stroke-width='7.5' fill='none' stroke-linecap='round'/><circle cx='49' cy='68' r='4' fill='" + sk + "'/></g>" +
+         "<g class='armUp'><path d='M43 43 Q54 34 52 18' stroke='" + v.top + "' stroke-width='7.5' fill='none' stroke-linecap='round'/><circle cx='52' cy='15' r='4' fill='" + sk + "'/></g>";
+    h += "<rect x='20' y='37' width='24' height='27' rx='7' fill='" + v.top + "' stroke='rgba(0,0,0,.12)'/>";
+    if(v.chador) h += "<path d='M22 39 L44 58 L44 64 L38 64 L20 47 Z' fill='" + v.bcol + "' stroke='" + v.trim + "' stroke-width='1.6'/>";
+    if(v.gamosa) h += "<path d='M24 36 Q32 44 40 36 L42 39 Q32 49 22 39 Z' fill='#fff' stroke='#c62828' stroke-width='1'/><rect x='24' y='40' width='6' height='20' fill='#fff' stroke='#ddd' stroke-width='.5'/><rect x='24' y='54' width='6' height='3' fill='#c62828'/><rect x='24' y='58' width='6' height='2' fill='#c62828'/>";
+    h += "<rect x='29' y='30' width='6' height='9' fill='" + sk + "'/>";
+    if(v.bun) h += "<circle cx='43' cy='18' r='6' fill='" + v.hair + "'/>";
+    h += "<circle cx='32' cy='22' r='12' fill='" + sk + "'/>" +
+         "<path d='M20 21 Q21 8 32 8 Q43 8 44 21 Q38 14 32 15 Q26 14 20 21 Z' fill='" + v.hair + "'/>" +
+         "<circle cx='27.5' cy='23' r='1.5' fill='#2a1d14'/><circle cx='36.5' cy='23' r='1.5' fill='#2a1d14'/>" +
+         "<path d='M28 28 Q32 31.5 36 28' stroke='#7a3b2a' stroke-width='1.4' fill='none' stroke-linecap='round'/>";
+    if(v.bun && v.trim) h += "<circle cx='32' cy='16.5' r='1.4' fill='" + v.trim + "'/>";
+    if(v.japi) h += "<ellipse cx='32' cy='13' rx='25' ry='6' fill='#d9b46a' stroke='#a8813c' stroke-width='1'/><path d='M14 12 Q32 -14 50 12 Z' fill='#e3c27c' stroke='#a8813c' stroke-width='1'/><path d='M22 9 l3 -4 l3 4 M30 6 l2 -5 l2 5 M37 9 l3 -4 l3 4' fill='#c62828'/><circle cx='32' cy='-2' r='2' fill='#1f6f4a'/>";
+    return h + "</svg>";
+  }
 
   function layout(){
     W = window.innerWidth; H = window.innerHeight; hudH = $("hud").getBoundingClientRect().height;
@@ -137,10 +246,10 @@
     var playH = H - hudH - panelH;
     groundY = hudH + playH * 0.62;                      // where the bins stand
     personY = hudH + playH * 0.86;                      // where villagers walk (closer to the player)
-    binsEl.style.top = (groundY - 104) + "px";
-    stage.style.background = "linear-gradient(#9fd8ee 0," + "#d8f1e4 " + (groundY-70) + "px,#8cc27a " + (groundY-70) + "px,#79b368 " +
-      (groundY+6) + "px,#d9b98a " + (groundY+6) + "px,#c9a674 100%)";
-    Array.prototype.forEach.call(document.querySelectorAll(".tree"), function(d){ d.style.top = (groundY - 190) + "px"; });
+    binsEl.style.top = (groundY - 104) + "px"; $("combo").style.top = (hudH + 8) + "px";
+    // the scene's path edge (y = 386 of 600) is pinned just below the bins
+    var scene = $("scene"), sh = (groundY + 8 - hudH) * 600 / 386;
+    scene.style.top = hudH + "px"; scene.style.height = Math.max(sh, H - hudH - panelH) + "px";
     gun.style.top = (H - panelH - 62) + "px";
     ORDER.forEach(function(k){ var r = binEls[k].getBoundingClientRect(); binPos[k] = { x: r.left + r.width/2, y: r.top + 4 }; });
   }
@@ -152,6 +261,50 @@
     ORDER.forEach(function(q){ ammoBtns[q].classList.toggle("on", q === k); });
     gun.style.setProperty("--c", CATS[k].color);
   }
+  // ---------- Sound: small synthesised effects, no audio files ----------
+  var AC = null, muted = false;
+  try{ muted = localStorage.getItem("squadMute") === "1"; }catch(_){}
+  function audioOn(){
+    if(AC) return;
+    try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){}
+  }
+  function tone(freq, dur, type, vol, slideTo, delay){
+    if(!AC || muted) return;
+    var t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + dur + 0.03);
+  }
+  var SFX = {
+    shot:   function(){ tone(520, 0.09, "square", 0.05, 180); },
+    hit:    function(){ tone(660, 0.10, "triangle", 0.18); tone(990, 0.18, "triangle", 0.18, null, 0.09); },
+    bad:    function(){ tone(170, 0.30, "sawtooth", 0.10, 90); },
+    land:   function(){ tone(150, 0.12, "sine", 0.20, 70); },
+    whistle:function(){ for(var i = 0; i < 6; i++) tone(2300 + (i % 2) * 260, 0.07, "square", 0.05, null, i * 0.06); },
+    combo:  function(){ tone(880, 0.08, "triangle", 0.16); tone(1175, 0.08, "triangle", 0.16, null, 0.08); tone(1568, 0.2, "triangle", 0.16, null, 0.16); },
+    end:    function(){ [523, 659, 784, 1047].forEach(function(f, i){ tone(f, 0.22, "triangle", 0.16, null, i * 0.13); }); }
+  };
+  function setMute(){ $("mute").textContent = muted ? "🔇" : "🔊"; }
+  $("mute").addEventListener("pointerdown", function(e){
+    e.stopPropagation(); muted = !muted; setMute();
+    try{ localStorage.setItem("squadMute", muted ? "1" : "0"); }catch(_){}
+  });
+  setMute();
+
+  function burst(x, y, color){
+    for(var i = 0; i < 12; i++){
+      var d = document.createElement("div"), a = Math.PI * 2 * i / 12, r = 34 + Math.random() * 30;
+      d.className = "pt"; d.style.background = i % 3 ? color : "#fff"; d.style.left = x + "px"; d.style.top = y + "px";
+      d.style.setProperty("--dx", Math.cos(a) * r + "px"); d.style.setProperty("--dy", Math.sin(a) * r + "px");
+      stage.appendChild(d); (function(d){ setTimeout(function(){ d.remove(); }, 560); })(d);
+    }
+  }
+  function streak(x, y){
+    S.combo++;
+    if(S.combo >= 2){ $("combo").textContent = "🔥 " + S.combo + " in a row"; $("combo").classList.add("show"); }
+    if(S.combo % 3 === 0){ S.score += PTS.combo; SFX.combo(); pop("+" + PTS.combo + " Combo!", "#e65100", x, y - 28); hud(); }
+  }
   function mix(a){ for(var i = a.length-1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function pop(text, color, x, y){
     var s = document.createElement("div"); s.className = "pop"; s.textContent = text; s.style.color = color;
@@ -160,6 +313,10 @@
   }
   function add(n, x, y, why){
     S.score += n;
+    if(n < 0){
+      S.combo = 0; $("combo").classList.remove("show"); SFX.bad();
+      stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake");
+    }
     pop((n > 0 ? "+" : "") + n + " " + why, n > 0 ? "#0b6b34" : "#c62828", x, y);
     hud();
   }
@@ -171,11 +328,13 @@
   }
 
   function start(){
+    audioOn(); if(AC && AC.state === "suspended") AC.resume();
     card.classList.remove("show");
     Array.prototype.forEach.call(document.querySelectorAll(".person,.fly"), function(e){ e.remove(); });
     var q = [];
     ORDER.forEach(function(k){ mix(CATS[k].items.slice()).slice(0, MIX[k]).forEach(function(it){ q.push({ cat:k, emoji:it[0], label:it[1] }); }); });
-    S = { queue: mix(q), people: [], fly: [], log: [], score: 0, fines: 0, sent: 0, sel: "wet", nextSpawn: 0, over: false };
+    S = { queue: mix(q), people: [], fly: [], log: [], score: 0, fines: 0, sent: 0, sel: "wet", nextSpawn: 0, over: false, combo: 0 };
+    $("combo").classList.remove("show");
     pick("wet"); hud(); layout();
   }
 
@@ -183,25 +342,27 @@
     var item = S.queue.pop(), dir = Math.random() < 0.5 ? 1 : -1;
     var target = item.cat;
     if(Math.random() < WRONG_THROW_CHANCE){ var others = ORDER.filter(function(k){ return k !== item.cat; }); target = others[Math.floor(Math.random()*others.length)]; }
-    var el = document.createElement("div"); el.className = "person";
-    el.innerHTML = '<div class="bub"><span>'+item.emoji+'</span> '+item.label+'</div><div class="p">'+FACES[Math.floor(Math.random()*FACES.length)]+'</div>';
+    var el = document.createElement("div"); el.className = "person carry";
+    if(!S.cast || !S.cast.length) S.cast = mix(VILLAGERS_ART.slice());
+    el.innerHTML = '<div class="bub"><span>'+item.emoji+'</span> '+item.label+'</div><div class="p">'+villager(S.cast.pop())+'</div>';
     stage.appendChild(el);
     var rec = { item:item, target:target, shot:null, out:null, badFine:false };
     S.log.push(rec); S.sent++;
     S.people.push({ el:el, x: dir > 0 ? -50 : W + 50, dir:dir, stopX: W*(0.3 + Math.random()*0.4), item:item, target:target,
-                    state:"in", t:0, offender:false, tapped:false, fined:false, rec:rec });
+                    state:"in", t:0, ph:Math.random()*6, offender:false, tapped:false, fined:false, rec:rec });
     hud();
   }
   function throwItem(p){
-    p.el.querySelector(".bub").style.visibility = "hidden";
+    p.el.querySelector(".bub").style.visibility = "hidden"; p.el.classList.remove("carry");
     var el = document.createElement("div"); el.className = "fly";
     el.innerHTML = '<div class="e">'+p.item.emoji+'</div><div class="l">'+p.item.label+'</div>';
     stage.appendChild(el);
     S.fly.push({ el:el, cat:p.item.cat, to:p.target, x0:p.x, y0:personY - 100, x1:binPos[p.target].x, y1:binPos[p.target].y,
-                 t:0, dur:2.7, peak:(personY - hudH) * 0.42, shot:false, p:p, x:p.x, y:personY - 100 });
+                 t:0, dur:2.7, peak:(personY - hudH) * 0.42, shot:false, p:p, x:p.x, y:personY - 100, spin:0, eEl:el.querySelector(".e") });
+    p.lean = 0.35;
   }
   function land(f){
-    f.el.remove();
+    f.el.remove(); SFX.land();
     var b = binEls[f.to], top = b.querySelector(".top");
     top.textContent = f.p.item.emoji; top.style.opacity = 1;
     b.classList.add("pulse"); setTimeout(function(){ b.classList.remove("pulse"); }, 350);
@@ -217,7 +378,7 @@
     if(S.sel === f.cat){
       var wasWrong = f.to !== f.cat;
       p.rec.out = wasWrong ? "saved" : "confirmed";
-      add(PTS.hit, x, y - 30, wasWrong ? "Saved!" : "Right!");
+      add(PTS.hit, x, y - 30, wasWrong ? "Saved!" : "Right!"); SFX.hit(); burst(x, y, CATS[f.cat].color); streak(x, y - 30);
       f.x0 = f.x; f.y0 = f.y; f.to = f.cat; f.x1 = binPos[f.cat].x; f.y1 = binPos[f.cat].y; f.t = 0; f.dur = 0.8; f.peak = 50;
       f.el.querySelector(".l").style.background = CATS[f.cat].color;
     } else {
@@ -232,7 +393,7 @@
       p.fined = true; p.rec.out = "fined"; S.fines++;
       var st = document.createElement("div"); st.className = "stamp"; st.textContent = FINE_AMOUNT ? "FINED ₹" + FINE_AMOUNT : "FINED";
       p.el.appendChild(st); p.state = "stamped"; p.t = 0;
-      add(PTS.fine, p.x, y, "Challan issued");
+      add(PTS.fine, p.x, y, "Challan issued"); SFX.whistle(); streak(p.x, y);
     } else {
       p.rec.badFine = true;
       add(PTS.badFine, p.x, y, "Wrongly fined");
@@ -250,7 +411,7 @@
     if(!best){
       for(i = 0; i < S.people.length; i++){
         var p = S.people[i];
-        if(Math.abs(p.x - x) < 44 && y > personY - 110 && y < personY + 20){      // a tap on a person never fires a shot
+        if(Math.abs(p.x - x) < 50 && y > personY - 160 && y < personY + 20){      // a tap on a person never fires a shot
           if(p.state === "leave" && !p.tapped) fine(p);
           return;
         }
@@ -267,6 +428,7 @@
       var s = document.createElement("div"); s.className = "splash"; s.style.background = col; s.style.left = x + "px"; s.style.top = y + "px";
       stage.appendChild(s); setTimeout(function(){ s.remove(); }, 350);
     }, 140);
+    SFX.shot();
     if(best) shoot(best, x, y);
   });
 
@@ -292,13 +454,19 @@
             p.el.remove(); S.people.splice(i, 1); continue;
           }
         }
-        p.el.style.transform = "translate(" + p.x + "px," + personY + "px) translate(-50%,-100%)";
+        var moving = p.state === "in" || p.state === "leave", bob = 0, rot = 0;
+        if(moving !== p.wk){ p.wk = moving; p.el.classList.toggle("walk", moving); }
+        if(moving){ p.ph += dt * 9; bob = -Math.abs(Math.sin(p.ph)) * 7; rot = Math.sin(p.ph) * 4; }
+        if(p.lean > 0){ p.lean -= dt; rot = -p.dir * 14 * (p.lean / 0.35); }
+        if(p.state === "stamped") rot = Math.sin(t / 30) * 6;
+        p.el.style.transform = "translate(" + p.x + "px," + (personY + bob) + "px) translate(-50%,-100%) rotate(" + rot + "deg)";
       }
       for(i = S.fly.length - 1; i >= 0; i--){
         var f = S.fly[i]; f.t += dt / f.dur;
         if(f.t >= 1){ land(f); S.fly.splice(i, 1); continue; }
         f.x = f.x0 + (f.x1 - f.x0) * f.t;
         f.y = f.y0 + (f.y1 - f.y0) * f.t - f.peak * 4 * f.t * (1 - f.t);
+        f.spin += dt * 220; f.eEl.style.transform = "rotate(" + f.spin + "deg)";
         f.el.style.transform = "translate(" + f.x + "px," + f.y + "px) translate(-50%,-50%)";
       }
       if(!S.queue.length && !S.people.length && !S.fly.length && S.sent >= VILLAGERS) results();
@@ -311,13 +479,14 @@
       "<li><b>Pick a colour</b> at the bottom: the stream the waste truly belongs to.</li>" +
       "<li><b>Tap the flying waste.</b> The right colour sends it to the right bin: +" + PTS.hit + ". Wrong colour: " + PTS.badShot + ".</li>" +
       "<li>If waste <b>lands in the wrong bin</b>, tap that person before they leave to issue a challan: +" + PTS.fine + ".</li>" +
-      "<li><b>Do not fine the innocent:</b> " + PTS.badFine + ". An offender who escapes: " + PTS.escape + ".</li></ol>" +
+      "<li><b>Do not fine the innocent:</b> " + PTS.badFine + ". An offender who escapes: " + PTS.escape + ".</li>" +
+      "<li>Every <b>3 in a row</b> earns a combo bonus: +" + PTS.combo + ".</li></ol>" +
       "<button id='go'>▶ Start duty</button>";
     card.classList.add("show");
     $("go").addEventListener("click", start);
   }
   function results(){
-    S.over = true;
+    S.over = true; SFX.end(); $("combo").classList.remove("show");
     var n = { saved:0, confirmed:0, fined:0, escaped:0, ok:0, bad:0 };
     S.log.forEach(function(r){ n[r.out]++; if(r.shot === "bad") n.bad++; if(r.badFine) n.bad++; });
     var txt = { saved:"✅ You saved it", confirmed:"✅ Right colour", fined:"🧾 Wrong bin, fined", escaped:"🏃 Wrong bin, escaped", ok:"👍 Thrown correctly" };
