@@ -21,6 +21,7 @@
   h1{font-size:clamp(22px,6.4vw,36px);font-weight:800;line-height:1.1}
   h1 span{color:#f2c94c}
   #tag{font-size:clamp(11px,3vw,15px);letter-spacing:1.5px;text-transform:uppercase;color:#8fb3a2;margin-top:3px}
+  html[lang=as] #tag{letter-spacing:0;text-transform:none}
   #sub{margin-top:8px;font-size:clamp(14px,3.9vw,20px);color:#b9d3c6;min-height:1.4em;transition:opacity .4s}
   #sub b{color:#f2c94c;font-size:1.15em}
   #sub.neg b{color:#ff8a80}
@@ -32,11 +33,14 @@
     top:calc(env(safe-area-inset-top,0px) + 8px);width:38px;height:38px;border-radius:10px;
     border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#cfe3d8;
     font-size:18px;display:none}
+  #lang{position:absolute;z-index:6;left:calc(env(safe-area-inset-left,0px) + 10px);
+    top:calc(env(safe-area-inset-top,0px) + 8px);height:38px;padding:0 10px;border-radius:10px;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#cfe3d8;font-size:14px;font-weight:700}
   #start{position:absolute;z-index:6;left:50%;transform:translateX(-50%);padding:12px 26px;
     border-radius:999px;border:0;background:#f2c94c;color:#10241b;font-size:clamp(16px,4.4vw,20px);
     font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:breathe 2.4s ease-in-out infinite;white-space:nowrap}
   @keyframes breathe{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
-  .item{position:absolute;left:0;top:0;width:92px;text-align:center;z-index:3;
+  .item{position:absolute;left:0;top:0;width:max-content;text-align:center;z-index:3;
     will-change:transform;touch-action:none}
   .item .e{font-size:44px;line-height:1.1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
   .item .l{display:inline-block;margin-top:2px;padding:2px 7px;border-radius:8px;font-size:12px;
@@ -96,12 +100,13 @@
 <div id="stage">
   <button id="fs" aria-label="Full screen">⛶</button>
   <header>
-    <h1>Segregate in <span>4</span></h1>
-    <div id="tag">SWM Rules 2026</div>
+    <h1 id="title"></h1>
+    <div id="tag"></div>
     <div id="sub"></div>
     <div id="caption"></div>
   </header>
-  <button id="start">▶ Start game</button>
+  <button id="lang"></button>
+  <button id="start"></button>
   <div id="bins"></div>
   <div id="card"></div>
 </div>
@@ -162,6 +167,129 @@
   function sizeOf(l){ var m = LEVELS[l].mix; return m.wet + m.dry + m.san + m.spc; }
   function passMark(l){ return Math.ceil(sizeOf(l) * RIGHT * PASS / 5) * 5; }
 
+  // Assamese text. Edit any line here to correct a translation.
+  var AS = {
+    "Wet waste": "ভিজা আৱৰ্জনা",
+    "Dry waste": "শুকান আৱৰ্জনা",
+    "Sanitary waste": "চেনিটাৰী আৱৰ্জনা",
+    "Special care": "বিশেষ যত্ন",
+    "Special care waste": "বিশেষ যত্নৰ আৱৰ্জনা",
+    "Compost or biogas": "পচন সাৰ বা বায়'গেছ",
+    "To MRF for recycling": "পুনৰ ব্যৱহাৰৰ বাবে MRF-লৈ",
+    "Wrap, keep separate": "মেৰিয়াই পৃথকে ৰাখক",
+    "Authorised collection": "অনুমোদিত সংগ্ৰহ কেন্দ্ৰ",
+    "Kitchen waste, vegetable and fruit peels, leftover food, meat and fish waste, flowers.": "পাকঘৰৰ আৱৰ্জনা, শাক-পাচলি আৰু ফলৰ বাকলি, ৰৈ যোৱা খাদ্য, মাছ-মাংসৰ আৱৰ্জনা, ফুল।",
+    "Compost it, or send it for bio-methanation at the nearest facility.": "পচন সাৰ কৰক, বা ওচৰৰ কেন্দ্ৰত বায়'-মিথেনেচনৰ বাবে পঠাওক।",
+    "Plastic, paper, cardboard, metal, glass and similar dry items.": "প্লাষ্টিক, কাগজ, কাৰ্ডবোৰ্ড, ধাতু, কাঁচ আৰু এনেধৰণৰ শুকান সামগ্ৰী।",
+    "Goes to a Material Recovery Facility (MRF) for sorting and recycling.": "বাছনি আৰু পুনৰ ব্যৱহাৰৰ বাবে মেটেৰিয়েল ৰিকভাৰী ফেচিলিটিলৈ (MRF) যায়।",
+    "Used diapers, sanitary napkins, tampons and similar hygiene waste.": "ব্যৱহৃত ডায়েপাৰ, চেনিটাৰী নেপকিন, টেম্পন আৰু এনেধৰণৰ আৱৰ্জনা।",
+    "Wrap it securely and store it separately from all other waste.": "ভালদৰে মেৰিয়াই আন সকলো আৱৰ্জনাৰ পৰা পৃথকে ৰাখক।",
+    "Bulbs, batteries, expired medicines, paint cans, mercury thermometers.": "বাল্ব, বেটাৰী, ম্যাদ উকলা ঔষধ, ৰঙৰ টেমা, পাৰাৰ থাৰ্মমিটাৰ।",
+    "Hand over only to an authorised agency or a designated collection centre.": "কেৱল অনুমোদিত সংস্থা বা নিৰ্দিষ্ট সংগ্ৰহ কেন্দ্ৰত জমা দিয়ক।",
+    "Banana peel": "কলৰ বাকলি",
+    "Vegetable waste": "শাক-পাচলিৰ আৱৰ্জনা",
+    "Leftover rice": "ৰৈ যোৱা ভাত",
+    "Rotten tomato": "গেলা বিলাহী",
+    "Apple core": "আপেলৰ অৱশিষ্ট",
+    "Orange peel": "সুমথিৰাৰ বাকলি",
+    "Fish waste": "মাছৰ আৱৰ্জনা",
+    "Leftover curry": "ৰৈ যোৱা তৰকাৰী",
+    "Potato peels": "আলুৰ বাকলি",
+    "Onion peels": "পিঁয়াজৰ বাকলি",
+    "Stale bread": "বাহি পাউৰুটি",
+    "Meat bones": "মাংসৰ হাড়",
+    "Watermelon rind": "তৰমুজৰ বাকলি",
+    "Carrot peels": "গাজৰৰ বাকলি",
+    "Used flowers": "ব্যৱহৃত ফুল",
+    "Eggshells": "কণীৰ খোলা",
+    "Used tea leaves": "ব্যৱহৃত চাহপাত",
+    "Plastic bottle": "প্লাষ্টিকৰ বটল",
+    "Newspaper": "বাতৰি কাকত",
+    "Glass bottle": "কাঁচৰ বটল",
+    "Cardboard box": "কাৰ্ডবোৰ্ডৰ বাকচ",
+    "Plastic bag": "প্লাষ্টিকৰ বেগ",
+    "Tin can": "টিনৰ টেমা",
+    "Waste paper": "অদৰকাৰী কাগজ",
+    "Old books": "পুৰণি কিতাপ",
+    "Plastic cup": "প্লাষ্টিকৰ কাপ",
+    "Envelope": "লেফাফা",
+    "Old notebook": "পুৰণি বহী",
+    "Metal scrap": "ধাতুৰ টুকুৰা",
+    "Old keys": "পুৰণি চাবি",
+    "Empty glass jar": "খালী কাঁচৰ বৈয়াম",
+    "Wrapping paper": "উপহাৰ মেৰিওৱা কাগজ",
+    "Bent steel spoon": "বেঁকা ষ্টীলৰ চামুচ",
+    "Old spanner": "পুৰণি ৰেঞ্চ",
+    "Paper bills": "কাগজৰ বিল",
+    "Chocolate wrapper": "চকলেটৰ পেকেট",
+    "Milk packet": "গাখীৰৰ পেকেট",
+    "Juice carton": "জুচৰ কাৰ্টন",
+    "Old clothes": "পুৰণি কাপোৰ",
+    "Old shoe": "পুৰণি জোতা",
+    "Used baby diaper": "শিশুৰ ব্যৱহৃত ডায়েপাৰ",
+    "Sanitary napkin": "চেনিটাৰী নেপকিন",
+    "Adult diaper": "প্ৰাপ্তবয়স্কৰ ডায়েপাৰ",
+    "Tampon": "টেম্পন",
+    "Used battery": "ব্যৱহৃত বেটাৰী",
+    "LED bulb": "LED বাল্ব",
+    "Expired tablets": "ম্যাদ উকলা টেবলেট",
+    "Paint can": "ৰঙৰ টেমা",
+    "CFL bulb": "CFL বাল্ব",
+    "Mercury thermometer": "পাৰাৰ থাৰ্মমিটাৰ",
+    "Tube light": "টিউব লাইট",
+    "Expired syrup": "ম্যাদ উকলা চিৰাপ",
+    "Segregate waste at source into 4 streams": "উৎসতে আৱৰ্জনা ৪ ভাগত পৃথক কৰক",
+    "Wet waste: compost it or send it for bio-methanation": "ভিজা আৱৰ্জনা: পচন সাৰ কৰক বা বায়'-মিথেনেচনৰ বাবে পঠাওক",
+    "Dry waste: goes to a Material Recovery Facility": "শুকান আৱৰ্জনা: মেটেৰিয়েল ৰিকভাৰী ফেচিলিটিলৈ যায়",
+    "Sanitary waste: wrap securely and keep separate": "চেনিটাৰী আৱৰ্জনা: ভালদৰে মেৰিয়াই পৃথকে ৰাখক",
+    "Special care waste: only to authorised collection": "বিশেষ যত্নৰ আৱৰ্জনা: কেৱল অনুমোদিত সংগ্ৰহ কেন্দ্ৰত দিয়ক",
+    "SWM Rules 2026 are in force from 1 April 2026": "SWM নিয়মাৱলী ২০২৬, ১ এপ্ৰিল ২০২৬ৰ পৰা বলবৎ",
+    "Never mix. Mixed waste cannot be composted or recycled": "কেতিয়াও নিমিহলাব। মিহলি আৱৰ্জনাৰ পৰা সাৰ বা পুনৰ ব্যৱহাৰ সম্ভৱ নহয়",
+    "SWM Rules 2026": "কঠিন আৱৰ্জনা ব্যৱস্থাপনা নিয়মাৱলী, ২০২৬",
+    "▶ Start game": "▶ খেল আৰম্ভ কৰক",
+    "Round": "ৰাউণ্ড",
+    "Item": "সামগ্ৰী",
+    "Points": "পইণ্ট",
+    "Need {0} to clear": "পাৰ হ'বলৈ {0} লাগিব",
+    "Round {0} of {1}": "ৰাউণ্ড {0}/{1}",
+    "Warm up": "আৰম্ভণি",
+    "Faster": "আৰু বেগী",
+    "Faster, trickier items": "আৰু বেগী, কঠিন সামগ্ৰী",
+    "Final round. Fastest": "অন্তিম ৰাউণ্ড। আটাইতকৈ বেগী",
+    "✅ Round {0} cleared!": "✅ ৰাউণ্ড {0} পাৰ হ'ল!",
+    "Round {0} not cleared": "ৰাউণ্ড {0} পাৰ নহ'ল",
+    "Total so far: {0} points": "এতিয়ালৈকে মুঠ: {0} পইণ্ট",
+    "You need {0} points to move to the next round. Check the answers and try again.": "পৰৱৰ্তী ৰাউণ্ডলৈ যাবলৈ {0} পইণ্ট লাগিব। উত্তৰবোৰ চাই আকৌ চেষ্টা কৰক।",
+    "correct": "শুদ্ধ",
+    "wrong": "ভুল",
+    "missed": "বাদ পৰিল",
+    "Correct answers": "শুদ্ধ উত্তৰ",
+    "✅ Correct": "✅ শুদ্ধ",
+    "❌ Wrong bin": "❌ ভুল বিন",
+    "⏱ Missed": "⏱ বাদ পৰিল",
+    "🔁 Try round {0} again": "🔁 ৰাউণ্ড {0} আকৌ খেলক",
+    "See your final result": "চূড়ান্ত ফলাফল চাওক",
+    "▶ Next round ({0} of {1})": "▶ পৰৱৰ্তী ৰাউণ্ড ({0}/{1})",
+    "Congratulations!": "অভিনন্দন!",
+    "You have cleared all {0} rounds.": "আপুনি {0} টা ৰাউণ্ডেই পাৰ হ'ল।",
+    "{0} points": "{0} পইণ্ট",
+    "out of {0}": "{0}ৰ ভিতৰত",
+    "Best": "শ্ৰেষ্ঠ",
+    "Now make your home, your village and your area clean.": "এতিয়া আপোনাৰ ঘৰ, গাঁও আৰু অঞ্চল পৰিষ্কাৰ কৰি ৰাখক।",
+    "Segregate your waste into 4 streams every day:": "প্ৰতিদিনে আৱৰ্জনা ৪ ভাগত পৃথক কৰক:",
+    "Share on WhatsApp": "WhatsApp-ত শ্বেয়াৰ কৰক",
+    "▶ Play again": "▶ আকৌ খেলক",
+    "What goes in:": "কি কি পৰে:",
+    "Where it goes:": "ক'লৈ যায়:",
+    "Tap to close": "বন্ধ কৰিবলৈ টিপক" };
+  var lang = "en";
+  try{ lang = localStorage.getItem("swm4lang") || "en"; }catch(_){}
+  function tr(s, a, b){
+    var o = (lang === "as" && AS[s]) || s;
+    return o.replace("{0}", a).replace("{1}", b);
+  }
+  function full(k){ return tr(k === "spc" ? "Special care waste" : CATS[k].name); }
+
   var $ = function(id){ return document.getElementById(id); };
   var stage = $("stage"), binsEl = $("bins"), capEl = $("caption"), subEl = $("sub"),
       cardEl = $("card"), fsBtn = $("fs"), startBtn = $("start"), headerEl = document.querySelector("header");
@@ -175,17 +303,35 @@
     var c = CATS[k], b = document.createElement("div");
     b.className = "bin"; b.style.setProperty("--c", c.color);
     b.innerHTML = '<div class="lid"></div><div class="body"><div class="i">'+c.icon+
-      '</div><div class="n">'+c.name+'</div><div class="g">'+c.goes+'</div></div>';
+      '</div><div class="n"></div><div class="g"></div></div>';
     b.addEventListener("click", function(){ if(mode === "demo") showInfo(k); });
     binsEl.appendChild(b); binEls[k] = b;
   });
 
+  function applyLang(){
+    document.documentElement.lang = lang === "as" ? "as" : "en";
+    $("title").innerHTML = lang === "as" ? "<span>৪</span> ভাগত পৃথক কৰক" : "Segregate in <span>4</span>";
+    $("tag").textContent = tr("SWM Rules 2026");
+    $("lang").textContent = lang === "as" ? "English" : "অসমীয়া";
+    startBtn.textContent = tr("▶ Start game");
+    ORDER.forEach(function(k){
+      binEls[k].querySelector(".n").textContent = tr(CATS[k].name);
+      binEls[k].querySelector(".g").textContent = tr(CATS[k].goes);
+    });
+    items.forEach(function(it){ it.el.querySelector(".l").textContent = tr(it.label); });
+  }
   function layout(){
     W = window.innerWidth; H = window.innerHeight;
     ORDER.forEach(function(k){ binRect[k] = binEls[k].getBoundingClientRect(); });
     binTop = binRect.wet.top;
     startBtn.style.bottom = (H - binTop + 22) + "px";
   }
+  applyLang();
+  $("lang").addEventListener("click", function(){
+    lang = lang === "as" ? "en" : "as";
+    try{ localStorage.setItem("swm4lang", lang); }catch(_){}
+    applyLang(); hideCard(); fi = Math.max(0, fi - 1); fact(); setTimeout(layout, 50);
+  });
   window.addEventListener("resize", layout);
   window.addEventListener("orientationchange", function(){ setTimeout(layout, 300); });
   layout();
@@ -222,7 +368,7 @@
   function spawn(d){
     var el = document.createElement("div");
     el.className = "item";
-    el.innerHTML = '<div class="e">'+d[1]+'</div><div class="l">'+d[2]+'</div>';
+    el.innerHTML = '<div class="e">'+d[1]+'</div><div class="l">'+tr(d[2])+'</div>';
     var it = { el:el, cat:d[0], emoji:d[1], label:d[2], x: 56 + Math.random()*(W-112),
                y: headerBottom() + 30, state:"fall", phase:Math.random()*6, alpha:0 };
     el.style.opacity = 0;
@@ -273,9 +419,9 @@
   }
   function hud(){
     subEl.classList.toggle("neg", round.score < 0);
-    subEl.innerHTML = "Round " + game.round + "/" + ROUNDS + " &nbsp;·&nbsp; Item " +
-      Math.min(round.size, round.results.length + 1) + "/" + round.size + "<br>Points: <b>" + round.score +
-      "</b> &nbsp;·&nbsp; Need " + round.pass + " to clear";
+    subEl.innerHTML = tr("Round") + " " + game.round + "/" + ROUNDS + " &nbsp;·&nbsp; " + tr("Item") + " " +
+      Math.min(round.size, round.results.length + 1) + "/" + round.size + "<br>" + tr("Points") + ": <b>" + round.score +
+      "</b> &nbsp;·&nbsp; " + tr("Need {0} to clear", round.pass);
   }
 
   function startRound(retry){
@@ -285,7 +431,8 @@
     var l = game.round - 1;
     mode = "round"; round = { lvl: LEVELS[l], size: sizeOf(l), pass: passMark(l),
                               queue: drawRound(l, game.attempt), results: [], score: 0 };
-    say("Round " + game.round + " of " + ROUNDS + " · " + LEVELS[l].note, "#f2c94c");
+    say(tr("Round {0} of {1}", game.round, ROUNDS) + " · " + tr(LEVELS[l].note), "#f2c94c");
+    $("lang").style.display = "none";
     startBtn.style.display = "none"; subEl.style.opacity = 1; hud();
     nextSpawn = 0; lastTouch = performance.now();
   }
@@ -295,22 +442,22 @@
     round.results.forEach(function(r){ n[r.res]++; });
     var passed = round.score >= round.pass, lastRound = game.round >= ROUNDS, maxPts = round.size * RIGHT;
     if(passed) game.total += round.score;
-    var mark = { right:"✅ Correct", wrong:"❌ Wrong bin", missed:"⏱ Missed" };
-    var h = "<h2>" + (passed ? "✅ Round " + game.round + " cleared!" : "Round " + game.round + " not cleared") +
+    var mark = { right:tr("✅ Correct"), wrong:tr("❌ Wrong bin"), missed:tr("⏱ Missed") };
+    var h = "<h2>" + tr(passed ? "✅ Round {0} cleared!" : "Round {0} not cleared", game.round) +
       "</h2><div class='big" + (passed ? "" : " neg") + "'>" + round.score + " / " + maxPts + "</div><div class='tally'>" +
-      (passed ? "Total so far: " + game.total + " points" : "You need " + round.pass + " points to move to the next round. Check the answers and try again.") +
-      "<br>✅ " + n.right + " correct &nbsp; ❌ " + n.wrong + " wrong &nbsp; ⏱ " + n.missed + " missed</div><h3>Correct answers</h3>";
+      (passed ? tr("Total so far: {0} points", game.total) : tr("You need {0} points to move to the next round. Check the answers and try again.", round.pass)) +
+      "<br>✅ " + n.right + " " + tr("correct") + " &nbsp; ❌ " + n.wrong + " " + tr("wrong") + " &nbsp; ⏱ " + n.missed + " " + tr("missed") +
+      "</div><h3>" + tr("Correct answers") + "</h3>";
     ORDER.forEach(function(k){
       var rows = round.results.filter(function(r){ return r.cat === k; });
       if(!rows.length) return;
       var c = CATS[k];
-      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + c.name +
-           (k === "spc" ? " waste" : "") + "</div><div class='w'>" + c.where + "</div>";
-      rows.forEach(function(r){ h += "<div class='r'><span>" + r.emoji + " " + r.label + "</span><span>" + mark[r.res] + "</span></div>"; });
+      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + full(k) + "</div><div class='w'>" + tr(c.where) + "</div>";
+      rows.forEach(function(r){ h += "<div class='r'><span>" + r.emoji + " " + tr(r.label) + "</span><span>" + mark[r.res] + "</span></div>"; });
       h += "</div>";
     });
-    h += "<button id='again'>" + (!passed ? "🔁 Try round " + game.round + " again" :
-      lastRound ? "See your final result" : "▶ Next round (" + (game.round + 1) + " of " + ROUNDS + ")") + "</button>";
+    h += "<button id='again'>" + (!passed ? tr("🔁 Try round {0} again", game.round) :
+      lastRound ? tr("See your final result") : tr("▶ Next round ({0} of {1})", game.round + 1, ROUNDS)) + "</button>";
     cardEl.style.setProperty("--c", passed ? "#2e9e5b" : "#d9453d");
     cardEl.innerHTML = h; cardEl.scrollTop = 0;
     cardEl.classList.add("show");
@@ -322,21 +469,20 @@
     if(game.total > best){ best = game.total; try{ localStorage.setItem("swm4best", String(best)); }catch(_){} }
     var max = 0; for(var q = 0; q < ROUNDS; q++) max += sizeOf(q) * RIGHT;
     cardEl.style.setProperty("--c", "#f2c94c");
-    var h = "<div style='text-align:center'><div style='font-size:54px'>🎉</div><h2>Congratulations!</h2>" +
-      "<p>You have cleared all " + ROUNDS + " rounds.</p><div class='big" + (game.total < 0 ? " neg" : "") + "'>" + game.total +
-      " points</div><div class='tally'>out of " + max + " &nbsp;·&nbsp; Best: " + best + "</div>" +
-      "<p style='font-size:17px;color:#fff'><b>Now make your home, your village and your area clean.</b></p>" +
-      "<p>Segregate your waste into 4 streams every day:</p></div>";
+    var h = "<div style='text-align:center'><div style='font-size:54px'>🎉</div><h2>" + tr("Congratulations!") + "</h2>" +
+      "<p>" + tr("You have cleared all {0} rounds.", ROUNDS) + "</p><div class='big" + (game.total < 0 ? " neg" : "") + "'>" + tr("{0} points", game.total) +
+      "</div><div class='tally'>" + tr("out of {0}", max) + " &nbsp;·&nbsp; " + tr("Best") + ": " + best + "</div>" +
+      "<p style='font-size:17px;color:#fff'><b>" + tr("Now make your home, your village and your area clean.") + "</b></p>" +
+      "<p>" + tr("Segregate your waste into 4 streams every day:") + "</p></div>";
     ORDER.forEach(function(k){
       var c = CATS[k];
-      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + c.name + (k === "spc" ? " waste" : "") +
-           "</div><div class='w'>" + c.where + "</div></div>";
+      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + full(k) + "</div><div class='w'>" + tr(c.where) + "</div></div>";
     });
     if(/^https?:/.test(location.protocol)){
       var msg = "I scored " + game.total + " points in Segregate in 4, the SWM Rules 2026 waste segregation game. Can you beat me? " + location.href.split("#")[0];
-      h += "<button id='wa' style='background:#25D366;color:#fff'>Share on WhatsApp</button>";
+      h += "<button id='wa' style='background:#25D366;color:#fff'>" + tr("Share on WhatsApp") + "</button>";
     }
-    h += "<button id='again'>▶ Play again</button>";
+    h += "<button id='again'>" + tr("▶ Play again") + "</button>";
     cardEl.innerHTML = h; cardEl.scrollTop = 0; cardEl.classList.add("show");
     $("again").addEventListener("click", function(e){ e.stopPropagation(); startRound(); });
     subEl.innerHTML = "";
@@ -350,7 +496,7 @@
   }
   function toDemo(){
     hideCard(); clearItems(); mode = "demo"; round = null; game = null; subEl.classList.remove("neg");
-    startBtn.style.display = ""; nextSpawn = 0; fact();
+    startBtn.style.display = ""; $("lang").style.display = ""; nextSpawn = 0; fact();
   }
   startBtn.addEventListener("click", function(){ startRound(); });
 
@@ -363,8 +509,8 @@
   function showInfo(k){
     var c = CATS[k];
     cardEl.style.setProperty("--c", c.color);
-    cardEl.innerHTML = "<h2>"+c.icon+" "+c.name+(k==="spc"?" waste":"")+"</h2><p><b>What goes in:</b> "+c.what+
-      "</p><p><b>Where it goes:</b> "+c.where+"</p><small>Tap to close</small>";
+    cardEl.innerHTML = "<h2>"+c.icon+" "+full(k)+"</h2><p><b>"+tr("What goes in:")+"</b> "+tr(c.what)+
+      "</p><p><b>"+tr("Where it goes:")+"</b> "+tr(c.where)+"</p><small>"+tr("Tap to close")+"</small>";
     cardEl.classList.add("show");
     clearTimeout(cardTimer); cardTimer = setTimeout(function(){ if(mode === "demo") hideCard(); }, 8000);
   }
@@ -373,7 +519,7 @@
   function fact(){
     if(mode !== "demo") return;
     subEl.style.opacity = 0;
-    setTimeout(function(){ if(mode !== "demo") return; subEl.textContent = FACTS[fi % FACTS.length]; fi++; subEl.style.opacity = 1; }, 400);
+    setTimeout(function(){ if(mode !== "demo") return; subEl.textContent = tr(FACTS[fi % FACTS.length]); fi++; subEl.style.opacity = 1; }, 400);
   }
   fact(); setInterval(fact, 6000);
 
@@ -405,7 +551,7 @@
           if(demo){
             it.state = "done"; it.el.classList.add("gone");
             (function(el){ setTimeout(function(){ el.remove(); }, 300); })(it.el);
-            pulse(it.cat); say(it.emoji + " " + it.label + " → " + CATS[it.cat].name, CATS[it.cat].color);
+            pulse(it.cat); say(it.emoji + " " + tr(it.label) + " → " + tr(CATS[it.cat].name), CATS[it.cat].color);
           } else { resolve(it, "missed", null); }
           continue;
         }
