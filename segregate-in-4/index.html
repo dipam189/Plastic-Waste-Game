@@ -101,7 +101,7 @@
     <div id="sub"></div>
     <div id="caption"></div>
   </header>
-  <button id="start">▶ Play a round</button>
+  <button id="start">▶ Play 4 rounds</button>
   <div id="bins"></div>
   <div id="card"></div>
 </div>
@@ -115,22 +115,27 @@
     wet: { name:"Wet waste", color:"#2e9e5b", icon:"🌱", goes:"Compost or biogas",
       what:"Kitchen waste, vegetable and fruit peels, leftover food, meat and fish waste, flowers.",
       where:"Compost it, or send it for bio-methanation at the nearest facility.",
-      items:[["🍌","Fruit peels"],["🥬","Vegetable waste"],["🍚","Leftover food"],["🌸","Flowers"],
-             ["🐟","Fish and meat waste"],["🥚","Eggshells"],["🍵","Used tea leaves"]] },
+      items:[["🍌","Banana peel"],["🥬","Vegetable waste"],["🍚","Leftover rice"],["🌸","Used flowers"],
+             ["🐟","Fish waste"],["🥚","Eggshells"],["🍵","Used tea leaves"],["🍖","Meat bones"],
+             ["🍞","Stale bread"],["🍅","Rotten tomato"],["🍎","Apple core"],["🍊","Orange peel"],
+             ["🧅","Onion peels"],["🥔","Potato peels"],["🍛","Leftover curry"],["🍉","Watermelon rind"]] },
     dry: { name:"Dry waste", color:"#2f7fd6", icon:"♻️", goes:"To MRF for recycling",
       what:"Plastic, paper, cardboard, metal, glass and similar dry items.",
       where:"Goes to a Material Recovery Facility (MRF) for sorting and recycling.",
-      items:[["🧴","Plastic bottle"],["📰","Paper"],["🥫","Metal can"],["🍾","Glass bottle"],
-             ["📦","Cardboard"],["🛍️","Plastic bag"]] },
+      items:[["🧴","Plastic bottle"],["📰","Newspaper"],["🥫","Tin can"],["🍾","Glass bottle"],
+             ["📦","Cardboard box"],["🛍️","Plastic bag"],["🥤","Plastic cup"],["📄","Waste paper"],
+             ["🧃","Juice carton"],["🍫","Chocolate wrapper"],["📚","Old books"],["👟","Old shoe"],
+             ["👕","Old clothes"],["🔩","Metal scrap"],["🥛","Milk packet"],["✉️","Envelope"],
+             ["🧾","Paper bills"],["🔑","Old keys"],["📒","Old notebook"],["🥄","Bent steel spoon"]] },
     san: { name:"Sanitary waste", color:"#d9453d", icon:"🧻", goes:"Wrap, keep separate",
       what:"Used diapers, sanitary napkins, tampons and similar hygiene waste.",
       where:"Wrap it securely and store it separately from all other waste.",
-      items:[["👶","Used diaper"],["🩸","Sanitary napkin"],["🧷","Tampon"]] },
+      items:[["👶","Used baby diaper"],["🩸","Sanitary napkin"],["🚺","Tampon"],["🧓","Adult diaper"]] },
     spc: { name:"Special care", color:"#c98a12", icon:"⚠️", goes:"Authorised collection",
       what:"Bulbs, batteries, expired medicines, paint cans, mercury thermometers.",
       where:"Hand over only to an authorised agency or a designated collection centre.",
-      items:[["💡","Bulb"],["🔋","Battery"],["💊","Expired medicine"],["🌡️","Mercury thermometer"],
-             ["🎨","Paint can"]] }
+      items:[["💡","LED bulb"],["💡","CFL bulb"],["💡","Tube light"],["🔋","Used battery"],
+             ["💊","Expired tablets"],["🧪","Expired syrup"],["🌡️","Mercury thermometer"],["🎨","Paint can"]] }
   };
   var ORDER = ["wet","dry","san","spc"];
   var FACTS = [
@@ -143,7 +148,9 @@
     "Never mix. Mixed waste cannot be composted or recycled"
   ];
   // -------------------------------------------------------------------------------
-  var ROUND_SIZE = 12, RIGHT = 10, WRONG = -5;
+  var ROUNDS = 4, RIGHT = 10, WRONG = -5;
+  var MIX = { wet:4, dry:5, san:1, spc:2 };      // items per stream in each round
+  var ROUND_SIZE = MIX.wet + MIX.dry + MIX.san + MIX.spc;
 
   var $ = function(id){ return document.getElementById(id); };
   var stage = $("stage"), binsEl = $("bins"), capEl = $("caption"), subEl = $("sub"),
@@ -151,7 +158,7 @@
 
   var W = 0, H = 0, binTop = 0, binRect = {}, binEls = {};
   var items = [], nextSpawn = 0, last = 0, bag = [];
-  var mode = "demo", round = null, lastTouch = 0, best = 0;
+  var mode = "demo", round = null, game = null, catBag = {}, lastTouch = 0, best = 0;
   try{ best = parseInt(localStorage.getItem("swm4best") || "0", 10) || 0; }catch(_){}
 
   ORDER.forEach(function(k){
@@ -180,6 +187,23 @@
       var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t;
     }
     return a;
+  }
+  function mix(a){
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  // Each stream has its own bag, so no item repeats until that stream's list is used up
+  function drawRound(){
+    var q = [];
+    ORDER.forEach(function(k){
+      for(var n = 0; n < MIX[k]; n++){
+        if(!catBag[k] || !catBag[k].length) catBag[k] = mix(CATS[k].items.map(function(it){ return [k,it[0],it[1]]; }));
+        q.push(catBag[k].pop());
+      }
+    });
+    return mix(q);
   }
   function headerBottom(){ return headerEl.getBoundingClientRect().bottom; }
 
@@ -236,14 +260,17 @@
     stage.appendChild(s); setTimeout(function(){ s.remove(); }, 800);
   }
   function hud(){
-    subEl.classList.toggle("neg", round.score < 0);
-    subEl.innerHTML = "Points: <b>" + round.score + "</b> &nbsp;·&nbsp; Item " +
-      Math.min(ROUND_SIZE, round.results.length + 1) + " of " + ROUND_SIZE;
+    var total = game.total + round.score;
+    subEl.classList.toggle("neg", total < 0);
+    subEl.innerHTML = "Round " + game.round + "/" + ROUNDS + " &nbsp;·&nbsp; Points: <b>" + total +
+      "</b> &nbsp;·&nbsp; Item " + Math.min(ROUND_SIZE, round.results.length + 1) + "/" + ROUND_SIZE;
   }
 
   function startRound(){
     hideCard(); clearItems(); capEl.classList.remove("show");
-    mode = "round"; round = { queue: shuffled().slice(0, ROUND_SIZE), results: [], score: 0 };
+    if(!game || game.round >= ROUNDS) game = { round: 0, total: 0 };
+    game.round++;
+    mode = "round"; round = { queue: drawRound(), results: [], score: 0 };
     startBtn.style.display = "none"; subEl.style.opacity = 1; hud();
     nextSpawn = 0; lastTouch = performance.now();
   }
@@ -251,11 +278,12 @@
     mode = "results"; lastTouch = performance.now();
     var n = { right:0, wrong:0, missed:0 };
     round.results.forEach(function(r){ n[r.res]++; });
-    if(round.score > best){ best = round.score; try{ localStorage.setItem("swm4best", String(best)); }catch(_){} }
+    game.total += round.score;
+    var lastRound = game.round >= ROUNDS;
     var mark = { right:"✅ Correct", wrong:"❌ Wrong bin", missed:"⏱ Missed" };
-    var h = "<h2>Round over</h2><div class='big" + (round.score < 0 ? " neg" : "") + "'>" + round.score +
-      " points</div><div class='tally'>✅ " + n.right + " correct &nbsp; ❌ " + n.wrong + " wrong &nbsp; ⏱ " +
-      n.missed + " missed &nbsp;·&nbsp; Best: " + best + "</div><h3>Correct answers</h3>";
+    var h = "<h2>Round " + game.round + " of " + ROUNDS + " over</h2><div class='big" + (round.score < 0 ? " neg" : "") + "'>" +
+      (round.score > 0 ? "+" : "") + round.score + " points</div><div class='tally'>✅ " + n.right + " correct &nbsp; ❌ " +
+      n.wrong + " wrong &nbsp; ⏱ " + n.missed + " missed<br>Total so far: " + game.total + " points</div><h3>Correct answers</h3>";
     ORDER.forEach(function(k){
       var rows = round.results.filter(function(r){ return r.cat === k; });
       if(!rows.length) return;
@@ -265,14 +293,43 @@
       rows.forEach(function(r){ h += "<div class='r'><span>" + r.emoji + " " + r.label + "</span><span>" + mark[r.res] + "</span></div>"; });
       h += "</div>";
     });
-    h += "<button id='again'>▶ Play again</button>";
+    h += "<button id='again'>" + (lastRound ? "See your final result" : "▶ Next round (" + (game.round + 1) + " of " + ROUNDS + ")") + "</button>";
     cardEl.style.setProperty("--c", "#f2c94c"); cardEl.innerHTML = h; cardEl.scrollTop = 0;
     cardEl.classList.add("show");
-    $("again").addEventListener("click", function(e){ e.stopPropagation(); startRound(); });
+    $("again").addEventListener("click", function(e){ e.stopPropagation(); if(lastRound) congrats(); else startRound(); });
     subEl.innerHTML = "";
   }
+  function congrats(){
+    lastTouch = performance.now();
+    if(game.total > best){ best = game.total; try{ localStorage.setItem("swm4best", String(best)); }catch(_){} }
+    var max = ROUNDS * ROUND_SIZE * RIGHT;
+    var h = "<div style='text-align:center'><div style='font-size:54px'>🎉</div><h2>Congratulations!</h2>" +
+      "<p>You have completed all " + ROUNDS + " rounds.</p><div class='big" + (game.total < 0 ? " neg" : "") + "'>" + game.total +
+      " points</div><div class='tally'>out of " + max + " &nbsp;·&nbsp; Best: " + best + "</div>" +
+      "<p style='font-size:17px;color:#fff'><b>Now make your home, your village and your area clean.</b></p>" +
+      "<p>Segregate your waste into 4 streams every day:</p></div>";
+    ORDER.forEach(function(k){
+      var c = CATS[k];
+      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + c.name + (k === "spc" ? " waste" : "") +
+           "</div><div class='w'>" + c.where + "</div></div>";
+    });
+    if(/^https?:/.test(location.protocol)){
+      var msg = "I scored " + game.total + " points in Segregate in 4, the SWM Rules 2026 waste segregation game. Can you beat me? " + location.href.split("#")[0];
+      h += "<button id='wa' style='background:#25D366;color:#fff'>Share on WhatsApp</button>";
+    }
+    h += "<button id='again'>▶ Play again</button>";
+    cardEl.innerHTML = h; cardEl.scrollTop = 0; cardEl.classList.add("show");
+    $("again").addEventListener("click", function(e){ e.stopPropagation(); startRound(); });
+    if($("wa")) $("wa").addEventListener("click", function(e){ e.stopPropagation(); window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank"); });
+    for(var i = 0; i < 18; i++){ (function(i){ setTimeout(function(){
+      var s = document.createElement("div"); s.className = "spark"; s.style.zIndex = 10;
+      s.textContent = ["🎉","✨","🌱","♻️"][i % 4];
+      s.style.left = (Math.random()*(W-30)) + "px"; s.style.top = (H*0.25 + Math.random()*H*0.5) + "px";
+      stage.appendChild(s); setTimeout(function(){ s.remove(); }, 800);
+    }, i*110); })(i); }
+  }
   function toDemo(){
-    hideCard(); clearItems(); mode = "demo"; round = null; subEl.classList.remove("neg");
+    hideCard(); clearItems(); mode = "demo"; round = null; game = null; subEl.classList.remove("neg");
     startBtn.style.display = ""; nextSpawn = 0; fact();
   }
   startBtn.addEventListener("click", startRound);
@@ -340,7 +397,7 @@
     }
 
     if(mode === "round" && !round.queue.length && !items.length && round.results.length >= ROUND_SIZE) endRound();
-    if(mode === "results" && t - lastTouch > 45000) toDemo();   // back to screensaver when left alone
+    if(mode === "results" && t - lastTouch > 60000) toDemo();   // back to screensaver when left alone
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(function(t){ last = t; tick(t); });
