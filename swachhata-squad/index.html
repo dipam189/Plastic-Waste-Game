@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d2a20">
+<title>Swachhata Squad | SWM Rules 2026</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:#0d2a20;color:#10241b;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+    -webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none}
+  #stage{position:fixed;inset:0;overflow:hidden;
+    background:linear-gradient(#9fd8ee 0%,#d8f1e4 46%,#8cc27a 46%,#79b368 58%,#d9b98a 58%,#c9a674 100%)}
+  #hud{position:absolute;top:0;left:0;right:0;z-index:6;display:flex;justify-content:space-between;gap:6px;
+    padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;background:#0d2a20;color:#fff;font-size:14px;font-weight:700}
+  #hud b{color:#f2c94c;font-size:17px}
+  #hud .neg b{color:#ff8a80}
+  .sun{position:absolute;top:70px;right:26px;font-size:44px;opacity:.9}
+  .tree{position:absolute;font-size:54px}
+  #bins{position:absolute;left:0;right:0;z-index:2;display:flex;gap:10px;padding:0 10px;height:104px}
+  .bin{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;position:relative}
+  .bin .top{position:absolute;top:-34px;font-size:26px;height:30px;transition:opacity .4s}
+  .lid{width:104%;height:10px;border-radius:6px 6px 2px 2px;background:var(--c);filter:brightness(1.2);
+    transform-origin:8% 100%;transition:transform .2s}
+  .body{flex:1;width:90%;margin-top:3px;border-radius:4px 4px 14px 14px;background:var(--c);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;padding:3px;
+    box-shadow:inset 0 -14px 22px rgba(0,0,0,.25),0 5px 10px rgba(0,0,0,.3)}
+  .body .i{font-size:22px}
+  .body .n{font-size:clamp(11px,3.2vw,15px);font-weight:800;color:#fff;line-height:1.1}
+  .bin.pulse .lid{transform:rotate(-24deg)}
+  .person{position:absolute;left:0;top:0;z-index:3;width:max-content;text-align:center;will-change:transform}
+  .person .p{font-size:58px;line-height:1}
+  .person .bub{display:inline-block;background:#fff;border-radius:12px;padding:3px 8px;font-size:12px;font-weight:700;
+    box-shadow:0 2px 6px rgba(0,0,0,.3);margin-bottom:2px;white-space:nowrap}
+  .person .bub span{font-size:22px;vertical-align:middle}
+  .person .stamp{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%) rotate(-14deg);border:3px solid #c62828;
+    color:#c62828;background:rgba(255,255,255,.9);font-weight:900;font-size:15px;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .fly{position:absolute;left:0;top:0;z-index:4;width:max-content;text-align:center;will-change:transform}
+  .fly .e{font-size:42px;line-height:1.05;filter:drop-shadow(0 4px 5px rgba(0,0,0,.4))}
+  .fly .l{display:inline-block;padding:2px 7px;border-radius:8px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);color:#fff;white-space:nowrap}
+  .bullet{position:absolute;left:0;top:0;z-index:5;width:18px;height:18px;border-radius:50%;margin:-9px 0 0 -9px;
+    box-shadow:0 0 0 3px rgba(255,255,255,.7);transition:transform .13s linear}
+  .splash{position:absolute;z-index:5;width:20px;height:20px;border-radius:50%;margin:-10px 0 0 -10px;opacity:.8;
+    animation:spl .35s ease-out forwards}
+  @keyframes spl{to{transform:scale(3.4);opacity:0}}
+  .pop{position:absolute;z-index:7;font-size:20px;font-weight:900;pointer-events:none;white-space:nowrap;
+    text-shadow:0 1px 0 #fff,0 2px 5px rgba(0,0,0,.5);transform:translateX(-50%);animation:up .9s ease-out forwards}
+  @keyframes up{to{margin-top:-56px;opacity:0}}
+  #panel{position:absolute;left:0;right:0;bottom:0;z-index:6;background:#0d2a20;
+    padding:10px 8px calc(env(safe-area-inset-bottom,0px) + 10px)}
+  #panel .cap{color:#b9d3c6;font-size:12px;text-align:center;margin-bottom:6px}
+  #ammo{display:flex;gap:8px}
+  #ammo button{flex:1;min-width:0;border:3px solid transparent;border-radius:14px;background:var(--c);color:#fff;
+    font-size:clamp(11px,3.1vw,14px);font-weight:800;padding:9px 2px;line-height:1.15;opacity:.8}
+  #ammo button.on{border-color:#fff;opacity:1;transform:translateY(-4px);box-shadow:0 6px 14px rgba(0,0,0,.5)}
+  #gun{position:absolute;z-index:5;left:50%;width:26px;height:70px;margin-left:-13px;border-radius:10px 10px 4px 4px;
+    background:#333;border:3px solid #111;transform-origin:50% 100%}
+  #gun:before{content:"";position:absolute;left:3px;right:3px;top:3px;height:22px;border-radius:6px;background:var(--c,#2e9e5b)}
+  #card{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,440px);max-height:88vh;
+    overflow-y:auto;touch-action:pan-y;padding:18px;border-radius:18px;background:#0f2a20;color:#eef5f0;
+    border:3px solid #f2c94c;box-shadow:0 20px 60px rgba(0,0,0,.7);display:none}
+  #card.show{display:block}
+  #card h2{font-size:23px;margin-bottom:6px}
+  #card p,#card li{font-size:15px;line-height:1.45;color:#d5e6dc;margin-top:6px}
+  #card ol{padding-left:20px}
+  #card b{color:#fff}
+  #card .big{font-size:40px;font-weight:800;color:#f2c94c}
+  #card .big.neg{color:#ff8a80}
+  #card .tally{font-size:14px;color:#b9d3c6;margin:4px 0 10px;line-height:1.6}
+  #card h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#8fb3a2;margin:8px 0 2px}
+  .row{display:flex;justify-content:space-between;gap:8px;font-size:14px;padding:5px 8px;margin-top:5px;border-radius:8px;
+    background:rgba(255,255,255,.05);border-left:5px solid var(--g)}
+  .row span:last-child{text-align:right;font-size:12.5px;color:#b9d3c6}
+  .row i{font-style:normal;font-weight:800;color:#fff}
+  #card button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:12px;background:#f2c94c;color:#10241b;
+    font-size:17px;font-weight:800}
+  #card a{display:block;text-align:center;margin-top:12px;color:#9cc4b0;font-size:14px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="sun">☀️</div>
+  <div id="hud"><span id="hPts">Points: <b>0</b></span><span id="hFine">Challans: <b>0</b></span><span id="hNum">0/10</span></div>
+  <div id="bins"></div>
+  <div id="gun"></div>
+  <div id="panel"><div class="cap">Pick the colour of the correct stream, then tap the flying waste</div><div id="ammo"></div></div>
+  <div id="card"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Settings and content (edit here) ----------
+  var FINE_AMOUNT = 0;        // set a rupee amount here only once it is confirmed from the order or bye-law; 0 hides the amount
+  var VILLAGERS = 10, WRONG_THROW_CHANCE = 0.6;
+  var PTS = { hit:10, fine:10, badShot:-5, badFine:-10, escape:-5 };
+  var CATS = {
+    wet:{ name:"Wet waste", color:"#2e9e5b", icon:"🌱",
+      items:[["🍌","Banana peel"],["🥬","Vegetable waste"],["🍚","Leftover rice"],["🍅","Rotten tomato"],["🐟","Fish waste"],["🥚","Eggshells"]] },
+    dry:{ name:"Dry waste", color:"#2f7fd6", icon:"♻️",
+      items:[["🧴","Plastic bottle"],["📰","Newspaper"],["🍾","Glass bottle"],["📦","Cardboard box"],["🥫","Tin can"],["🛍️","Plastic bag"]] },
+    san:{ name:"Sanitary waste", color:"#d9453d", icon:"🧻",
+      items:[["👶","Used baby diaper"],["🩸","Sanitary napkin"],["🧓","Adult diaper"]] },
+    spc:{ name:"Special care", color:"#c98a12", icon:"⚠️",
+      items:[["🔋","Used battery"],["💡","LED bulb"],["💊","Expired tablets"],["🎨","Paint can"],["🌡️","Mercury thermometer"]] }
+  };
+  var ORDER = ["wet","dry","san","spc"], MIX = { wet:3, dry:3, san:2, spc:2 };
+  var FACES = ["👨‍🌾","👩‍🌾","👴","👵","🧔","👩","👨","🧑"];
+  // -------------------------------------------------------
+
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $("stage"), binsEl = $("bins"), ammoEl = $("ammo"), gun = $("gun"), card = $("card"), panel = $("panel");
+  var W, H, hudH, groundY, personY, binPos = {}, binEls = {}, ammoBtns = {};
+  var S = null, last = 0;
+
+  ORDER.forEach(function(k){
+    var c = CATS[k], b = document.createElement("div");
+    b.className = "bin"; b.style.setProperty("--c", c.color);
+    b.innerHTML = '<div class="top"></div><div class="lid"></div><div class="body"><div class="i">'+c.icon+'</div><div class="n">'+c.name+'</div></div>';
+    binsEl.appendChild(b); binEls[k] = b;
+    var a = document.createElement("button"); a.style.setProperty("--c", c.color); a.textContent = c.name;
+    a.addEventListener("pointerdown", function(e){ e.stopPropagation(); pick(k); });
+    ammoEl.appendChild(a); ammoBtns[k] = a;
+  });
+  [["🌳",6,0],["🌴",78,0],["🏠",40,0]].forEach(function(t){
+    var d = document.createElement("div"); d.className = "tree"; d.textContent = t[0]; d.style.left = t[1] + "%"; stage.appendChild(d); t[2] = d;
+    d.dataset.deco = "1";
+  });
+
+  function layout(){
+    W = window.innerWidth; H = window.innerHeight; hudH = $("hud").getBoundingClientRect().height;
+    var panelH = panel.getBoundingClientRect().height;
+    var playH = H - hudH - panelH;
+    groundY = hudH + playH * 0.62;                      // where the bins stand
+    personY = hudH + playH * 0.86;                      // where villagers walk (closer to the player)
+    binsEl.style.top = (groundY - 104) + "px";
+    stage.style.background = "linear-gradient(#9fd8ee 0," + "#d8f1e4 " + (groundY-70) + "px,#8cc27a " + (groundY-70) + "px,#79b368 " +
+      (groundY+6) + "px,#d9b98a " + (groundY+6) + "px,#c9a674 100%)";
+    Array.prototype.forEach.call(document.querySelectorAll(".tree"), function(d){ d.style.top = (groundY - 190) + "px"; });
+    gun.style.top = (H - panelH - 62) + "px";
+    ORDER.forEach(function(k){ var r = binEls[k].getBoundingClientRect(); binPos[k] = { x: r.left + r.width/2, y: r.top + 4 }; });
+  }
+  window.addEventListener("resize", layout);
+  window.addEventListener("orientationchange", function(){ setTimeout(layout, 300); });
+
+  function pick(k){
+    if(S) S.sel = k;
+    ORDER.forEach(function(q){ ammoBtns[q].classList.toggle("on", q === k); });
+    gun.style.setProperty("--c", CATS[k].color);
+  }
+  function mix(a){ for(var i = a.length-1; i > 0; i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pop(text, color, x, y){
+    var s = document.createElement("div"); s.className = "pop"; s.textContent = text; s.style.color = color;
+    s.style.left = Math.max(70, Math.min(W-70, x)) + "px"; s.style.top = y + "px"; stage.appendChild(s);
+    setTimeout(function(){ s.remove(); }, 900);
+  }
+  function add(n, x, y, why){
+    S.score += n;
+    pop((n > 0 ? "+" : "") + n + " " + why, n > 0 ? "#0b6b34" : "#c62828", x, y);
+    hud();
+  }
+  function hud(){
+    $("hPts").className = S.score < 0 ? "neg" : "";
+    $("hPts").innerHTML = "Points: <b>" + S.score + "</b>";
+    $("hFine").innerHTML = "Challans: <b>" + S.fines + (FINE_AMOUNT ? " (₹" + (S.fines * FINE_AMOUNT) + ")" : "") + "</b>";
+    $("hNum").textContent = Math.min(VILLAGERS, S.sent) + "/" + VILLAGERS;
+  }
+
+  function start(){
+    card.classList.remove("show");
+    Array.prototype.forEach.call(document.querySelectorAll(".person,.fly"), function(e){ e.remove(); });
+    var q = [];
+    ORDER.forEach(function(k){ mix(CATS[k].items.slice()).slice(0, MIX[k]).forEach(function(it){ q.push({ cat:k, emoji:it[0], label:it[1] }); }); });
+    S = { queue: mix(q), people: [], fly: [], log: [], score: 0, fines: 0, sent: 0, sel: "wet", nextSpawn: 0, over: false };
+    pick("wet"); hud(); layout();
+  }
+
+  function spawn(){
+    var item = S.queue.pop(), dir = Math.random() < 0.5 ? 1 : -1;
+    var target = item.cat;
+    if(Math.random() < WRONG_THROW_CHANCE){ var others = ORDER.filter(function(k){ return k !== item.cat; }); target = others[Math.floor(Math.random()*others.length)]; }
+    var el = document.createElement("div"); el.className = "person";
+    el.innerHTML = '<div class="bub"><span>'+item.emoji+'</span> '+item.label+'</div><div class="p">'+FACES[Math.floor(Math.random()*FACES.length)]+'</div>';
+    stage.appendChild(el);
+    var rec = { item:item, target:target, shot:null, out:null, badFine:false };
+    S.log.push(rec); S.sent++;
+    S.people.push({ el:el, x: dir > 0 ? -50 : W + 50, dir:dir, stopX: W*(0.3 + Math.random()*0.4), item:item, target:target,
+                    state:"in", t:0, offender:false, tapped:false, fined:false, rec:rec });
+    hud();
+  }
+  function throwItem(p){
+    p.el.querySelector(".bub").style.visibility = "hidden";
+    var el = document.createElement("div"); el.className = "fly";
+    el.innerHTML = '<div class="e">'+p.item.emoji+'</div><div class="l">'+p.item.label+'</div>';
+    stage.appendChild(el);
+    S.fly.push({ el:el, cat:p.item.cat, to:p.target, x0:p.x, y0:personY - 100, x1:binPos[p.target].x, y1:binPos[p.target].y,
+                 t:0, dur:2.7, peak:(personY - hudH) * 0.42, shot:false, p:p, x:p.x, y:personY - 100 });
+  }
+  function land(f){
+    f.el.remove();
+    var b = binEls[f.to], top = b.querySelector(".top");
+    top.textContent = f.p.item.emoji; top.style.opacity = 1;
+    b.classList.add("pulse"); setTimeout(function(){ b.classList.remove("pulse"); }, 350);
+    setTimeout(function(){ top.style.opacity = 0; }, 3200);
+    var p = f.p; p.offender = f.to !== f.cat;
+    if(!p.rec.out) p.rec.out = p.offender ? "pending" : "ok";
+    p.state = "leave";
+  }
+
+  function shoot(f, x, y){
+    f.shot = true;
+    var p = f.p;
+    if(S.sel === f.cat){
+      var wasWrong = f.to !== f.cat;
+      p.rec.out = wasWrong ? "saved" : "confirmed";
+      add(PTS.hit, x, y - 30, wasWrong ? "Saved!" : "Right!");
+      f.x0 = f.x; f.y0 = f.y; f.to = f.cat; f.x1 = binPos[f.cat].x; f.y1 = binPos[f.cat].y; f.t = 0; f.dur = 0.8; f.peak = 50;
+      f.el.querySelector(".l").style.background = CATS[f.cat].color;
+    } else {
+      p.rec.shot = "bad";
+      add(PTS.badShot, x, y - 30, "Wrong colour");
+    }
+  }
+  function fine(p){
+    p.tapped = true;
+    var y = personY - 120;
+    if(p.offender){
+      p.fined = true; p.rec.out = "fined"; S.fines++;
+      var st = document.createElement("div"); st.className = "stamp"; st.textContent = FINE_AMOUNT ? "FINED ₹" + FINE_AMOUNT : "FINED";
+      p.el.appendChild(st); p.state = "stamped"; p.t = 0;
+      add(PTS.fine, p.x, y, "Challan issued");
+    } else {
+      p.rec.badFine = true;
+      add(PTS.badFine, p.x, y, "Wrongly fined");
+    }
+  }
+
+  stage.addEventListener("pointerdown", function(e){
+    if(!S || S.over || card.classList.contains("show")) return;
+    var x = e.clientX, y = e.clientY, i, best = null, bd = 60;
+    if(y < hudH) return;
+    for(i = 0; i < S.fly.length; i++){
+      var f = S.fly[i]; if(f.shot) continue;
+      var d = Math.hypot(f.x - x, f.y - y); if(d < bd){ bd = d; best = f; }
+    }
+    if(!best){
+      for(i = 0; i < S.people.length; i++){
+        var p = S.people[i];
+        if(Math.abs(p.x - x) < 44 && y > personY - 110 && y < personY + 20){      // a tap on a person never fires a shot
+          if(p.state === "leave" && !p.tapped) fine(p);
+          return;
+        }
+      }
+    }
+    // fire a colour shot from the launcher to the tap point
+    var col = CATS[S.sel].color, gx = W/2, gy = gun.getBoundingClientRect().top;
+    gun.style.transform = "rotate(" + (Math.atan2(x - gx, gy - y) * 180/Math.PI) + "deg)";
+    var b = document.createElement("div"); b.className = "bullet"; b.style.background = col;
+    b.style.transform = "translate(" + gx + "px," + gy + "px)"; stage.appendChild(b);
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){ b.style.transform = "translate(" + x + "px," + y + "px)"; }); });
+    setTimeout(function(){
+      b.remove();
+      var s = document.createElement("div"); s.className = "splash"; s.style.background = col; s.style.left = x + "px"; s.style.top = y + "px";
+      stage.appendChild(s); setTimeout(function(){ s.remove(); }, 350);
+    }, 140);
+    if(best) shoot(best, x, y);
+  });
+
+  function tick(t){
+    var dt = Math.min(0.05, (t - last)/1000); last = t;
+    if(S && !S.over){
+      var busy = S.people.some(function(p){ return p.state === "in" || p.state === "aim"; });
+      if(S.queue.length && !busy && S.people.length < 2 && t > S.nextSpawn){ spawn(); S.nextSpawn = t + 3200; }
+      var i;
+      for(i = S.people.length - 1; i >= 0; i--){
+        var p = S.people[i];
+        if(p.state === "in"){
+          p.x += p.dir * (W/4.2) * dt;
+          if((p.dir > 0 && p.x >= p.stopX) || (p.dir < 0 && p.x <= p.stopX)){ p.state = "aim"; p.t = 0; }
+        } else if(p.state === "aim"){
+          p.t += dt; if(p.t > 0.7){ p.state = "wait"; throwItem(p); }
+        } else if(p.state === "stamped"){
+          p.t += dt; if(p.t > 1){ p.state = "leave"; }
+        } else if(p.state === "leave"){
+          p.x += p.dir * (W/5.5) * dt;
+          if(p.x < -60 || p.x > W + 60){
+            if(p.offender && !p.fined){ p.rec.out = "escaped"; add(PTS.escape, p.dir > 0 ? W - 80 : 80, personY - 120, "Offender escaped"); }
+            p.el.remove(); S.people.splice(i, 1); continue;
+          }
+        }
+        p.el.style.transform = "translate(" + p.x + "px," + personY + "px) translate(-50%,-100%)";
+      }
+      for(i = S.fly.length - 1; i >= 0; i--){
+        var f = S.fly[i]; f.t += dt / f.dur;
+        if(f.t >= 1){ land(f); S.fly.splice(i, 1); continue; }
+        f.x = f.x0 + (f.x1 - f.x0) * f.t;
+        f.y = f.y0 + (f.y1 - f.y0) * f.t - f.peak * 4 * f.t * (1 - f.t);
+        f.el.style.transform = "translate(" + f.x + "px," + f.y + "px) translate(-50%,-50%)";
+      }
+      if(!S.queue.length && !S.people.length && !S.fly.length && S.sent >= VILLAGERS) results();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function intro(){
+    card.innerHTML = "<h2>🚨 Swachhata Squad</h2><p>You are on segregation duty in the village. Four bins, four streams.</p><ol>" +
+      "<li><b>Pick a colour</b> at the bottom: the stream the waste truly belongs to.</li>" +
+      "<li><b>Tap the flying waste.</b> The right colour sends it to the right bin: +" + PTS.hit + ". Wrong colour: " + PTS.badShot + ".</li>" +
+      "<li>If waste <b>lands in the wrong bin</b>, tap that person before they leave to issue a challan: +" + PTS.fine + ".</li>" +
+      "<li><b>Do not fine the innocent:</b> " + PTS.badFine + ". An offender who escapes: " + PTS.escape + ".</li></ol>" +
+      "<button id='go'>▶ Start duty</button>";
+    card.classList.add("show");
+    $("go").addEventListener("click", start);
+  }
+  function results(){
+    S.over = true;
+    var n = { saved:0, confirmed:0, fined:0, escaped:0, ok:0, bad:0 };
+    S.log.forEach(function(r){ n[r.out]++; if(r.shot === "bad") n.bad++; if(r.badFine) n.bad++; });
+    var txt = { saved:"✅ You saved it", confirmed:"✅ Right colour", fined:"🧾 Wrong bin, fined", escaped:"🏃 Wrong bin, escaped", ok:"👍 Thrown correctly" };
+    var h = "<h2>Duty over</h2><div class='big" + (S.score < 0 ? " neg" : "") + "'>" + S.score + " points</div><div class='tally'>✅ " +
+      (n.saved + n.confirmed) + " correct shots &nbsp; 🧾 " + n.fined + " challans" + (FINE_AMOUNT ? " (₹" + n.fined * FINE_AMOUNT + ")" : "") +
+      "<br>🏃 " + n.escaped + " escaped &nbsp; ⚠️ " + n.bad + " mistakes</div><h3>Correct answers</h3>";
+    S.log.forEach(function(r){
+      var c = CATS[r.item.cat];
+      h += "<div class='row' style='--g:" + c.color + "'><span>" + r.item.emoji + " " + r.item.label + " → <i>" + c.name + "</i></span><span>" +
+        txt[r.out] + (r.shot === "bad" ? "<br>wrong colour shot" : "") + (r.badFine ? "<br>wrongly fined" : "") + "</span></div>";
+    });
+    h += "<button id='go'>▶ Play again</button><a href='../segregate-in-4/'>Play Segregate in 4</a>";
+    card.innerHTML = h; card.scrollTop = 0; card.classList.add("show");
+    $("go").addEventListener("click", start);
+  }
+
+  layout(); pick("wet"); intro();
+  requestAnimationFrame(function(t){ last = t; tick(t); });
+})();
+</script>
+</body>
+</html>
