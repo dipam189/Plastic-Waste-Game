@@ -16,39 +16,34 @@
     -webkit-user-select:none;user-select:none;touch-action:none;overscroll-behavior:none}
   #stage{position:fixed;inset:0;
     background:radial-gradient(120% 80% at 50% 0%,#12352a 0%,#0a1c15 55%,#07130e 100%)}
-
   header{position:absolute;top:0;left:0;right:0;text-align:center;z-index:5;pointer-events:none;
-    padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0}
-  h1{font-size:clamp(20px,5.6vw,34px);font-weight:800;letter-spacing:.2px}
+    padding:calc(env(safe-area-inset-top,0px) + 12px) 56px 0}
+  h1{font-size:clamp(22px,6.4vw,36px);font-weight:800;line-height:1.1}
   h1 span{color:#f2c94c}
-  #fact{margin-top:6px;font-size:clamp(13px,3.6vw,19px);color:#b9d3c6;min-height:1.4em;
-    transition:opacity .5s}
-  #caption{margin:10px auto 0;display:inline-block;padding:7px 14px;border-radius:999px;
+  #tag{font-size:clamp(11px,3vw,15px);letter-spacing:1.5px;text-transform:uppercase;color:#8fb3a2;margin-top:3px}
+  #sub{margin-top:8px;font-size:clamp(14px,3.9vw,20px);color:#b9d3c6;min-height:1.4em;transition:opacity .4s}
+  #sub b{color:#f2c94c;font-size:1.15em}
+  #sub.neg b{color:#ff8a80}
+  #caption{margin:8px auto 0;display:inline-block;padding:6px 14px;border-radius:999px;
     font-size:clamp(14px,4vw,20px);font-weight:700;background:rgba(255,255,255,.08);
     border:2px solid transparent;opacity:0;transition:opacity .3s,border-color .3s}
   #caption.show{opacity:1}
-
-  #hint{position:absolute;left:0;right:0;z-index:4;text-align:center;pointer-events:none;
-    font-size:clamp(12px,3.4vw,16px);color:#8fb3a2;animation:breathe 3s ease-in-out infinite}
-  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:1}}
-  #score{position:absolute;z-index:6;left:calc(env(safe-area-inset-left,0px) + 12px);
-    top:calc(env(safe-area-inset-top,0px) + 12px);font-size:15px;font-weight:800;color:#f2c94c;line-height:1.25;
-    opacity:0;transition:opacity .4s}
-  #score.show{opacity:1}
   #fs{position:absolute;z-index:6;right:calc(env(safe-area-inset-right,0px) + 10px);
     top:calc(env(safe-area-inset-top,0px) + 8px);width:38px;height:38px;border-radius:10px;
     border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#cfe3d8;
     font-size:18px;display:none}
-
+  #start{position:absolute;z-index:6;left:50%;transform:translateX(-50%);padding:12px 26px;
+    border-radius:999px;border:0;background:#f2c94c;color:#10241b;font-size:clamp(16px,4.4vw,20px);
+    font-weight:800;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:breathe 2.4s ease-in-out infinite;white-space:nowrap}
+  @keyframes breathe{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
   .item{position:absolute;left:0;top:0;width:92px;text-align:center;z-index:3;
-    will-change:transform;touch-action:none;cursor:grab}
+    will-change:transform;touch-action:none}
   .item .e{font-size:44px;line-height:1.1;filter:drop-shadow(0 4px 6px rgba(0,0,0,.5))}
   .item .l{display:inline-block;margin-top:2px;padding:2px 7px;border-radius:8px;font-size:12px;
     font-weight:600;background:rgba(0,0,0,.45);color:#f3f8f5;white-space:nowrap}
   .item.drag{z-index:8}
   .item.drag .e{font-size:56px}
   .item.gone{transition:opacity .28s;opacity:0}
-
   #bins{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:8px;
     height:clamp(128px,25vh,200px);
     padding:0 calc(env(safe-area-inset-right,0px) + 8px) calc(env(safe-area-inset-bottom,0px) + 10px)
@@ -71,30 +66,42 @@
   .bin.no .body{animation:shake .4s}
   @keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}
     60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-
-  #card{position:absolute;z-index:9;left:50%;top:44%;transform:translate(-50%,-50%) scale(.9);
-    width:min(88vw,420px);padding:18px 18px 16px;border-radius:18px;background:#0f2a20;
-    border:3px solid var(--c,#fff);box-shadow:0 20px 60px rgba(0,0,0,.6);opacity:0;
+  #card{position:absolute;z-index:9;left:50%;top:50%;transform:translate(-50%,-50%) scale(.92);
+    width:min(92vw,440px);max-height:86vh;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+    padding:18px;border-radius:18px;background:#0f2a20;
+    border:3px solid var(--c,#f2c94c);box-shadow:0 20px 60px rgba(0,0,0,.7);opacity:0;
     pointer-events:none;transition:opacity .25s,transform .25s}
   #card.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
-  #card h2{font-size:22px;margin-bottom:8px}
+  #card h2{font-size:22px;margin-bottom:6px}
   #card p{font-size:15px;line-height:1.4;color:#d5e6dc;margin-top:6px}
   #card b{color:#fff}
   #card small{display:block;margin-top:10px;color:#86a898;font-size:12px}
-  .spark{position:absolute;z-index:7;font-size:22px;font-weight:800;text-shadow:0 2px 4px rgba(0,0,0,.6);pointer-events:none;animation:up .8s ease-out forwards}
-  @keyframes up{to{transform:translateY(-60px) scale(1.5);opacity:0}}
+  #card .big{font-size:40px;font-weight:800;color:#f2c94c;line-height:1.1}
+  #card .big.neg{color:#ff8a80}
+  #card .tally{font-size:14px;color:#b9d3c6;margin:4px 0 12px}
+  #card h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:#8fb3a2;margin:6px 0}
+  .grp{border-left:5px solid var(--g);background:rgba(255,255,255,.05);border-radius:8px;padding:8px 10px;margin-top:8px}
+  .grp .t{font-weight:800;font-size:15px}
+  .grp .w{font-size:12px;color:#b9d3c6;margin-bottom:4px}
+  .grp .r{display:flex;justify-content:space-between;gap:8px;font-size:15px;padding:2px 0}
+  .grp .r span:last-child{white-space:nowrap;font-size:13px;color:#b9d3c6}
+  #card button{margin-top:14px;width:100%;padding:13px;border:0;border-radius:12px;background:#f2c94c;
+    color:#10241b;font-size:17px;font-weight:800}
+  .spark{position:absolute;z-index:7;font-size:24px;font-weight:800;pointer-events:none;
+    text-shadow:0 2px 4px rgba(0,0,0,.7);animation:up .8s ease-out forwards}
+  @keyframes up{to{transform:translateY(-60px) scale(1.4);opacity:0}}
 </style>
 </head>
 <body>
 <div id="stage">
-  <div id="score"></div>
   <button id="fs" aria-label="Full screen">⛶</button>
   <header>
-    <h1>Segregate in <span>4</span> · SWM Rules 2026</h1>
-    <div id="fact"></div>
+    <h1>Segregate in <span>4</span></h1>
+    <div id="tag">SWM Rules 2026</div>
+    <div id="sub"></div>
     <div id="caption"></div>
   </header>
-  <div id="hint">Drag to the right bin: +10 · Wrong bin: -5 · Tap a bin to learn</div>
+  <button id="start">▶ Play a round</button>
   <div id="bins"></div>
   <div id="card"></div>
 </div>
@@ -136,21 +143,23 @@
     "Never mix. Mixed waste cannot be composted or recycled"
   ];
   // -------------------------------------------------------------------------------
+  var ROUND_SIZE = 12, RIGHT = 10, WRONG = -5;
 
-  var stage = document.getElementById("stage"), binsEl = document.getElementById("bins"),
-      capEl = document.getElementById("caption"), factEl = document.getElementById("fact"),
-      hintEl = document.getElementById("hint"), scoreEl = document.getElementById("score"),
-      cardEl = document.getElementById("card"), fsBtn = document.getElementById("fs");
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $("stage"), binsEl = $("bins"), capEl = $("caption"), subEl = $("sub"),
+      cardEl = $("card"), fsBtn = $("fs"), startBtn = $("start"), headerEl = document.querySelector("header");
 
   var W = 0, H = 0, binTop = 0, binRect = {}, binEls = {};
-  var items = [], lastTouch = -1e9, nextSpawn = 0, last = 0, score = 0, bag = [];
+  var items = [], nextSpawn = 0, last = 0, bag = [];
+  var mode = "demo", round = null, lastTouch = 0, best = 0;
+  try{ best = parseInt(localStorage.getItem("swm4best") || "0", 10) || 0; }catch(_){}
 
   ORDER.forEach(function(k){
     var c = CATS[k], b = document.createElement("div");
     b.className = "bin"; b.style.setProperty("--c", c.color);
     b.innerHTML = '<div class="lid"></div><div class="body"><div class="i">'+c.icon+
       '</div><div class="n">'+c.name+'</div><div class="g">'+c.goes+'</div></div>';
-    b.addEventListener("click", function(){ showCard(k); });
+    b.addEventListener("click", function(){ if(mode === "demo") showInfo(k); });
     binsEl.appendChild(b); binEls[k] = b;
   });
 
@@ -158,30 +167,28 @@
     W = window.innerWidth; H = window.innerHeight;
     ORDER.forEach(function(k){ binRect[k] = binEls[k].getBoundingClientRect(); });
     binTop = binRect.wet.top;
-    hintEl.style.top = (binTop - 30) + "px";
+    startBtn.style.bottom = (H - binTop + 22) + "px";
   }
   window.addEventListener("resize", layout);
   window.addEventListener("orientationchange", function(){ setTimeout(layout, 300); });
   layout();
 
-  // Shuffled bag so every item appears before any repeats
-  function nextItem(){
-    if(!bag.length){
-      ORDER.forEach(function(k){ CATS[k].items.forEach(function(it){ bag.push([k,it[0],it[1]]); }); });
-      for(var i = bag.length - 1; i > 0; i--){
-        var j = Math.floor(Math.random()*(i+1)), t = bag[i]; bag[i] = bag[j]; bag[j] = t;
-      }
+  function shuffled(){
+    var a = [];
+    ORDER.forEach(function(k){ CATS[k].items.forEach(function(it){ a.push([k,it[0],it[1]]); }); });
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t;
     }
-    return bag.pop();
+    return a;
   }
+  function headerBottom(){ return headerEl.getBoundingClientRect().bottom; }
 
-  function spawn(){
-    var d = nextItem(), el = document.createElement("div");
+  function spawn(d){
+    var el = document.createElement("div");
     el.className = "item";
     el.innerHTML = '<div class="e">'+d[1]+'</div><div class="l">'+d[2]+'</div>';
-    var it = { el:el, cat:d[0], emoji:d[1], label:d[2], x: 50 + Math.random()*(W-100),
-               y: 150, state:"fall", phase:Math.random()*6, alpha:0 };
-    it.y = headerBottom() + 30;
+    var it = { el:el, cat:d[0], emoji:d[1], label:d[2], x: 56 + Math.random()*(W-112),
+               y: headerBottom() + 30, state:"fall", phase:Math.random()*6, alpha:0 };
     el.style.opacity = 0;
     el.addEventListener("pointerdown", function(e){ grab(it, e); });
     el.addEventListener("pointermove", function(e){ if(it.state === "drag"){ it.x = e.clientX; it.y = e.clientY - 20; } });
@@ -189,94 +196,123 @@
     el.addEventListener("pointercancel", function(){ if(it.state === "drag"){ it.state = "fall"; el.classList.remove("drag"); } });
     stage.appendChild(el); items.push(it);
   }
-  function headerBottom(){ return document.querySelector("header").getBoundingClientRect().bottom; }
+  function clearItems(){ items.forEach(function(it){ it.el.remove(); }); items = []; }
 
   function grab(it, e){
-    if(it.state === "done") return;
-    e.preventDefault(); lastTouch = performance.now();
+    if(mode !== "round" || it.state !== "fall") return;
+    e.preventDefault();
     it.state = "drag"; it.el.classList.add("drag");
     try{ it.el.setPointerCapture(e.pointerId); }catch(_){}
     it.x = e.clientX; it.y = e.clientY - 20;
-    hideCard();
   }
   function drop(it, e){
     if(it.state !== "drag") return;
-    lastTouch = performance.now();
     it.el.classList.remove("drag");
     var hit = null;
     ORDER.forEach(function(k){
       var r = binRect[k];
       if(e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 50) hit = k;
     });
-    if(hit === it.cat){ absorb(it, true); }
-    else if(hit){
-      var b = binEls[hit]; b.classList.remove("no"); void b.offsetWidth; b.classList.add("no");
-      say("✋ Not here. " + it.label + " is " + CATS[it.cat].name.toLowerCase().replace("special care","special care waste"),
-          CATS[it.cat].color);
-      addPoints(-5, hit);
-      it.state = "rise";
-    } else { it.state = "fall"; }
+    if(hit) resolve(it, hit === it.cat ? "right" : "wrong", hit);
+    else it.state = "fall";
   }
 
-  function absorb(it, byUser){
+  // One attempt per item. No hint is shown about the correct bin during a round.
+  function resolve(it, res, binKey){
     it.state = "done"; it.el.classList.add("gone");
-    var c = CATS[it.cat], b = binEls[it.cat];
-    b.classList.add("pulse"); setTimeout(function(){ b.classList.remove("pulse"); }, 450);
-    say((byUser ? "✅ " : "") + it.emoji + " " + it.label + " → " + c.name, c.color);
-    if(byUser){
-      addPoints(10, it.cat);
-    }
     setTimeout(function(){ it.el.remove(); }, 300);
+    round.results.push({ cat:it.cat, emoji:it.emoji, label:it.label, res:res });
+    if(res === "right"){ round.score += RIGHT; pulse(binKey); pop("+" + RIGHT, "#7CFC9A", binKey); }
+    else if(res === "wrong"){
+      round.score += WRONG; pop(String(WRONG), "#ff8a80", binKey);
+      var b = binEls[binKey]; b.classList.remove("no"); void b.offsetWidth; b.classList.add("no");
+    }
+    hud();
   }
-
-  var best = 0, started = false;
-  try{ best = parseInt(localStorage.getItem("swm4best")||"0",10)||0; }catch(_){}
-  function addPoints(n, k){
-    score += n; started = true;
-    if(score > best){ best = score; try{ localStorage.setItem("swm4best", String(best)); }catch(_){} }
-    scoreEl.innerHTML = "Points: " + score + "<br><span style='font-size:11px;color:#b9d3c6'>Best: " + best + "</span>";
-    scoreEl.style.color = score < 0 ? "#ff8a80" : "#f2c94c";
-    var s = document.createElement("div"); s.className = "spark";
-    s.textContent = (n > 0 ? "+" : "") + n; s.style.color = n > 0 ? "#7CFC9A" : "#ff8a80";
-    var r = binRect[k]; s.style.left = (r.left + r.width/2 - 16) + "px"; s.style.top = (r.top - 26) + "px";
+  function pulse(k){ var b = binEls[k]; b.classList.add("pulse"); setTimeout(function(){ b.classList.remove("pulse"); }, 450); }
+  function pop(text, color, k){
+    var s = document.createElement("div"); s.className = "spark"; s.textContent = text; s.style.color = color;
+    var r = binRect[k]; s.style.left = (r.left + r.width/2 - 18) + "px"; s.style.top = (r.top - 34) + "px";
     stage.appendChild(s); setTimeout(function(){ s.remove(); }, 800);
   }
-  var capTimer = 0;
+  function hud(){
+    subEl.classList.toggle("neg", round.score < 0);
+    subEl.innerHTML = "Points: <b>" + round.score + "</b> &nbsp;·&nbsp; Item " +
+      Math.min(ROUND_SIZE, round.results.length + 1) + " of " + ROUND_SIZE;
+  }
+
+  function startRound(){
+    hideCard(); clearItems(); capEl.classList.remove("show");
+    mode = "round"; round = { queue: shuffled().slice(0, ROUND_SIZE), results: [], score: 0 };
+    startBtn.style.display = "none"; subEl.style.opacity = 1; hud();
+    nextSpawn = 0; lastTouch = performance.now();
+  }
+  function endRound(){
+    mode = "results"; lastTouch = performance.now();
+    var n = { right:0, wrong:0, missed:0 };
+    round.results.forEach(function(r){ n[r.res]++; });
+    if(round.score > best){ best = round.score; try{ localStorage.setItem("swm4best", String(best)); }catch(_){} }
+    var mark = { right:"✅ Correct", wrong:"❌ Wrong bin", missed:"⏱ Missed" };
+    var h = "<h2>Round over</h2><div class='big" + (round.score < 0 ? " neg" : "") + "'>" + round.score +
+      " points</div><div class='tally'>✅ " + n.right + " correct &nbsp; ❌ " + n.wrong + " wrong &nbsp; ⏱ " +
+      n.missed + " missed &nbsp;·&nbsp; Best: " + best + "</div><h3>Correct answers</h3>";
+    ORDER.forEach(function(k){
+      var rows = round.results.filter(function(r){ return r.cat === k; });
+      if(!rows.length) return;
+      var c = CATS[k];
+      h += "<div class='grp' style='--g:" + c.color + "'><div class='t'>" + c.icon + " " + c.name +
+           (k === "spc" ? " waste" : "") + "</div><div class='w'>" + c.where + "</div>";
+      rows.forEach(function(r){ h += "<div class='r'><span>" + r.emoji + " " + r.label + "</span><span>" + mark[r.res] + "</span></div>"; });
+      h += "</div>";
+    });
+    h += "<button id='again'>▶ Play again</button>";
+    cardEl.style.setProperty("--c", "#f2c94c"); cardEl.innerHTML = h; cardEl.scrollTop = 0;
+    cardEl.classList.add("show");
+    $("again").addEventListener("click", function(e){ e.stopPropagation(); startRound(); });
+    subEl.innerHTML = "";
+  }
+  function toDemo(){
+    hideCard(); clearItems(); mode = "demo"; round = null; subEl.classList.remove("neg");
+    startBtn.style.display = ""; nextSpawn = 0; fact();
+  }
+  startBtn.addEventListener("click", startRound);
+
+  // Demo mode helpers: captions, facts and bin info cards
+  var capTimer = 0, cardTimer = 0, fi = 0;
   function say(text, color){
     capEl.textContent = text; capEl.style.borderColor = color; capEl.classList.add("show");
     clearTimeout(capTimer); capTimer = setTimeout(function(){ capEl.classList.remove("show"); }, 3200);
   }
-
-  var cardTimer = 0;
-  function showCard(k){
-    lastTouch = performance.now();
+  function showInfo(k){
     var c = CATS[k];
     cardEl.style.setProperty("--c", c.color);
     cardEl.innerHTML = "<h2>"+c.icon+" "+c.name+(k==="spc"?" waste":"")+"</h2><p><b>What goes in:</b> "+c.what+
       "</p><p><b>Where it goes:</b> "+c.where+"</p><small>Tap to close</small>";
     cardEl.classList.add("show");
-    clearTimeout(cardTimer); cardTimer = setTimeout(hideCard, 8000);
+    clearTimeout(cardTimer); cardTimer = setTimeout(function(){ if(mode === "demo") hideCard(); }, 8000);
   }
   function hideCard(){ cardEl.classList.remove("show"); }
-  cardEl.addEventListener("click", hideCard);
-
-  // Rotating one-line facts
-  var fi = 0;
-  function rotateFact(){
-    factEl.style.opacity = 0;
-    setTimeout(function(){ factEl.textContent = FACTS[fi % FACTS.length]; fi++; factEl.style.opacity = 1; }, 500);
+  cardEl.addEventListener("click", function(){ if(mode === "demo") hideCard(); });
+  function fact(){
+    if(mode !== "demo") return;
+    subEl.style.opacity = 0;
+    setTimeout(function(){ if(mode !== "demo") return; subEl.textContent = FACTS[fi % FACTS.length]; fi++; subEl.style.opacity = 1; }, 400);
   }
-  rotateFact(); setInterval(rotateFact, 6000);
+  fact(); setInterval(fact, 6000);
 
   function tick(t){
     var dt = Math.min(0.05, (t - last)/1000); last = t;
-    var play = (t - lastTouch) < 12000;
-    scoreEl.classList.toggle("show", play && started);
     var top0 = headerBottom() + 30, span = Math.max(80, binTop - top0);
-    var speed = span / (play ? 11 : 8);          // seconds to cross the screen
-    var steerFrom = top0 + span * (play ? 0.62 : 0.28);
+    var demo = mode === "demo";
+    var speed = span / (demo ? 8 : 10);
 
-    if(t > nextSpawn && items.length < (W > 700 ? 7 : 5)){ spawn(); nextSpawn = t + (play ? 2600 : 1900); }
+    if(demo && t > nextSpawn && items.length < (W > 700 ? 7 : 5)){
+      if(!bag.length) bag = shuffled();
+      spawn(bag.pop()); nextSpawn = t + 1900;
+    }
+    if(mode === "round" && round.queue.length && t > nextSpawn && items.length < 4){
+      spawn(round.queue.pop()); nextSpawn = t + 2300;
+    }
 
     for(var i = items.length - 1; i >= 0; i--){
       var it = items[i];
@@ -284,20 +320,27 @@
       it.alpha = Math.min(1, it.alpha + dt*2);
       if(it.state === "fall"){
         it.y += speed*dt; it.phase += dt;
-        if(it.y > steerFrom){
-          var r = binRect[it.cat], tx = r.left + r.width/2;
-          it.x += (tx - it.x) * Math.min(1, dt*2.4);
+        if(demo && it.y > top0 + span*0.28){
+          var r = binRect[it.cat];
+          it.x += (r.left + r.width/2 - it.x) * Math.min(1, dt*2.4);
         }
-        if(it.y >= binTop - 8){ absorb(it, false); continue; }
-      } else if(it.state === "rise"){
-        it.y -= span*1.6*dt;
-        if(it.y <= top0 + span*0.3){ it.state = "fall"; }
+        if(it.y >= binTop - 8){
+          if(demo){
+            it.state = "done"; it.el.classList.add("gone");
+            (function(el){ setTimeout(function(){ el.remove(); }, 300); })(it.el);
+            pulse(it.cat); say(it.emoji + " " + it.label + " → " + CATS[it.cat].name, CATS[it.cat].color);
+          } else { resolve(it, "missed", null); }
+          continue;
+        }
       }
       var sway = it.state === "drag" ? 0 : Math.sin(it.phase*1.3)*10;
       var x = Math.max(46, Math.min(W-46, it.x + sway));
       it.el.style.opacity = it.alpha;
       it.el.style.transform = "translate("+x+"px,"+it.y+"px) translate(-50%,-50%)";
     }
+
+    if(mode === "round" && !round.queue.length && !items.length && round.results.length >= ROUND_SIZE) endRound();
+    if(mode === "results" && t - lastTouch > 45000) toDemo();   // back to screensaver when left alone
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(function(t){ last = t; tick(t); });
@@ -314,7 +357,6 @@
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible"){ wake(); layout(); } });
   wake();
 
-  // Full screen button where the browser supports it (Android, tablets, desktop)
   var root = document.documentElement;
   var reqFs = root.requestFullscreen || root.webkitRequestFullscreen;
   var standalone = window.navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
